@@ -31,6 +31,14 @@ CREATE TABLE platos (
   fecha DATE DEFAULT NULL
 );
 
+CREATE TABLE bebidas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(200) NOT NULL,
+  precio DECIMAL(10,2) NOT NULL,
+  imagen VARCHAR(255) DEFAULT NULL,
+  fecha DATE DEFAULT NULL
+);
+
 CREATE TABLE pedidos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   id_sala INT NOT NULL,
@@ -99,6 +107,10 @@ VALUES
 ('CHAUFA',20.00,'2022-05-17'),
 ('GASEOSA COCA COLA 1.5 LITROS',8.00,'2022-05-17');
 
+INSERT INTO bebidas (nombre, precio, fecha)
+VALUES
+('GASEOSA COCA COLA 1.5 LITROS',8.00,'2022-05-17');
+
 INSERT INTO usuarios (nombre, correo, pass, rol)
 VALUES ('Admin', 'admin@test.com', '123456', 'Administrador');
 
@@ -114,6 +126,7 @@ VALUES
 ('GASEOSA COCA COLA 1.5 LITROS',8.00,1,'',1);
 
 select * from platos;
+select * from bebidas;
 select * from reservas;
 
 ALTER TABLE platos ADD COLUMN imagen VARCHAR(255) DEFAULT NULL;
@@ -124,4 +137,3 @@ ALTER TABLE pedidos_web ADD COLUMN telefono VARCHAR(15) NOT NULL AFTER nombre_cl
 ALTER TABLE usuarios 
 ADD COLUMN telefono VARCHAR(15) DEFAULT NULL,
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-

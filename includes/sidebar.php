@@ -285,6 +285,7 @@ $iniciales = strtoupper(
 
 .i-panel   { background: rgba(99,102,241,.15); }
 .i-platos  { background: rgba(16,185,129,.15); }
+.i-bebidas { background: rgba(14,165,233,.15); }
 .i-salas   { background: rgba(245,158,11,.15); }
 .i-mesas   { background: rgba(6,182,212,.15);  }
 .i-pedidos { background: rgba(239,68,68,.15);  }
@@ -405,6 +406,11 @@ $iniciales = strtoupper(
         <a href="platos.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'platos.php' ? 'active' : '' ?>">
             <div class="sb-item-icon i-platos"><i data-lucide="chef-hat"></i></div>
             <span class="sb-item-label">Platos</span>
+        </a>
+
+        <a href="bebidas.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'bebidas.php' ? 'active' : '' ?>">
+            <div class="sb-item-icon i-bebidas"><i data-lucide="cup-soda"></i></div>
+            <span class="sb-item-label">Bebidas</span>
         </a>
 
         <a href="salas.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'salas.php' ? 'active' : '' ?>">

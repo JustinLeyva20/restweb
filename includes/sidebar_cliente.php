@@ -218,6 +218,7 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
 }
 .i-inicio   { background: rgba(200,150,46,.18); color: #E4B84A; }
 .i-platos   { background: rgba(92,61,30,.4);    color: #d4a55a; }
+.i-bebidas  { background: rgba(44,74,74,.35);   color: #7fc7c7; }
 .i-mesas    { background: rgba(44,74,46,.35);   color: #7cb87e; }
 .i-pedidos  { background: rgba(139,26,26,.3);   color: #d47070; }
 .i-reservas { background: rgba(200,150,46,.15); color: #c8b46e; }
@@ -291,9 +292,14 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
             Platos
         </a>
 
+        <a href="bebidas_usuario.php" class="sb-item <?= $paginaActual === 'bebidas_usuario.php' ? 'active' : '' ?>">
+            <div class="sb-item-icon i-bebidas"><i data-lucide="cup-soda" style="width:15px;height:15px;"></i></div>
+            Bebidas
+        </a>
+
         <a href="mesas_cliente.php" class="sb-item <?= $paginaActual === 'mesas_cliente.php' ? 'active' : '' ?>">
-            <div class="sb-item-icon i-mesas"><i data-lucide="armchair" style="width:15px;height:15px;"></i></div>
-            Mesas
+            <div class="sb-item-icon i-mesas"><i data-lucide="calendar-check" style="width:15px;height:15px;"></i></div>
+            Reservas
         </a>
 
         <span class="sb-section-label">Mis cosas</span>
