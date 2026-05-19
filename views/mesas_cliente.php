@@ -5,10 +5,8 @@ require "../config/conexion.php";
 if (!isset($_SESSION['usuario'])) { header("Location: login.php"); exit; }
 if ($_SESSION['rol'] === 'Administrador') { header("Location: dashboard.php"); exit; }
 
-// ✅ Definir $nombre_usuario PRIMERO
 $nombre_usuario = htmlspecialchars($_SESSION['usuario'] ?? 'Cliente');
 
-// ✅ Ahora sí cancelar funciona porque $nombre_usuario ya existe
 if (isset($_GET['cancelar'])) {
     $id = (int)$_GET['cancelar'];
     $conexion->prepare("
@@ -18,25 +16,20 @@ if (isset($_GET['cancelar'])) {
     header("Location: mis_reservas.php"); exit;
 }
 
-// ... resto del código
 $nombre_usuario = htmlspecialchars($_SESSION['usuario'] ?? 'Cliente');
 
-// Obtener salas con sus mesas
 $salas = $conexion->query("SELECT * FROM salas ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener pedidos PENDIENTES para marcar mesas ocupadas
 $ocupados = $conexion->query("
     SELECT id_sala, num_mesa FROM reservas
     WHERE estado = 'PENDIENTE'
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Construir set de mesas ocupadas: "sala_id-num_mesa"
 $ocupadasSet = [];
 foreach ($ocupados as $o) {
     $ocupadasSet[$o['id_sala'] . '-' . $o['num_mesa']] = true;
 }
 
-// Procesar reserva (POST)
 $mensajeReserva = null;
 $tipoMensaje    = 'ok';
 
@@ -48,44 +41,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     $personas = (int)($_POST['personas'] ?? 1);
     $nota     = htmlspecialchars($_POST['nota'] ?? '');
 
-    // Validaciones básicas
-if ($id_sala && $num_mesa && $fecha && $hora && $personas >= 1) {
+    if ($id_sala && $num_mesa && $fecha && $hora && $personas >= 1) {
+        $clave = $id_sala . '-' . $num_mesa;
+        if (isset($ocupadasSet[$clave])) {
+            $mensajeReserva = "Esa mesa ya tiene una reserva activa hoy. Elige otra.";
+            $tipoMensaje    = 'error';
+        } else {
+            $stmt = $conexion->prepare("
+                INSERT INTO reservas (id_sala, num_mesa, usuario, fecha, hora, personas, nota)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([$id_sala, $num_mesa, $nombre_usuario, $fecha, $hora, $personas, $nota]);
+            $mensajeReserva = "¡Reserva confirmada! Mesa $num_mesa reservada para el $fecha a las $hora.";
 
-    $clave = $id_sala . '-' . $num_mesa;
-
-    if (isset($ocupadasSet[$clave])) {
-        $mensajeReserva = "Esa mesa ya tiene una reserva activa hoy. Elige otra.";
-        $tipoMensaje    = 'error';
-
-    } else {
-        $stmt = $conexion->prepare("
-            INSERT INTO reservas (id_sala, num_mesa, usuario, fecha, hora, personas, nota)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([$id_sala, $num_mesa, $nombre_usuario, $fecha, $hora, $personas, $nota]);
-
-        $mensajeReserva = "¡Reserva confirmada! Mesa $num_mesa reservada para el $fecha a las $hora.";
-
-        // Recargar mesas ocupadas desde la tabla reservas
-$ocupados2 = $conexion->query("
-    SELECT id_sala, num_mesa FROM reservas
-    WHERE estado = 'PENDIENTE'
-")->fetchAll(PDO::FETCH_ASSOC);
-
-        $ocupadasSet = [];
-        foreach ($ocupados2 as $o) {
-            $ocupadasSet[$o['id_sala'] . '-' . $o['num_mesa']] = true;
+            $ocupados2 = $conexion->query("
+                SELECT id_sala, num_mesa FROM reservas
+                WHERE estado = 'PENDIENTE'
+            ")->fetchAll(PDO::FETCH_ASSOC);
+            $ocupadasSet = [];
+            foreach ($ocupados2 as $o) {
+                $ocupadasSet[$o['id_sala'] . '-' . $o['num_mesa']] = true;
+            }
         }
+    } else {
+        $mensajeReserva = "Completa todos los campos obligatorios.";
+        $tipoMensaje    = 'error';
     }
-
-} else {
-    $mensajeReserva = "Completa todos los campos obligatorios.";
-    $tipoMensaje    = 'error';
-}
 }
 
-// JSON de salas para JavaScript
-$salasJson = json_encode($salas, JSON_HEX_TAG | JSON_HEX_QUOT);
+$salasJson    = json_encode($salas, JSON_HEX_TAG | JSON_HEX_QUOT);
 $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
 ?>
 <!DOCTYPE html>
@@ -96,10 +80,9 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     <title>La Delicia — Mesas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
-    /* ══════════════════════════════════
-       VARIABLES
-    ══════════════════════════════════ */
     :root {
         --cream:    #F5EFE0;
         --warm:     #EDE0C4;
@@ -139,7 +122,10 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         50%    { box-shadow: 0 0 0 8px rgba(200,150,46,.0); }
     }
 
-    /* ── TOP BAR ──────────────────────── */
+    /* Lucide helpers */
+    .icon svg { display:block; }
+
+    /* ── TOP BAR ── */
     .top-bar {
         position: fixed; top:0; left:0; right:0; z-index:900;
         height: 64px;
@@ -166,28 +152,27 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         background:var(--gold); color:#fff;
         padding:.4rem 1.1rem; border-radius:2rem;
         font-size:.76rem; transition:background .2s, transform .2s;
+        display: flex; align-items: center; gap: .4rem;
     }
+    .top-nav .cta svg { width: 14px; height: 14px; stroke-width: 2.2; }
     .top-nav .cta:hover { background:var(--brown); transform:translateY(-1px); }
 
-    /* ── MAIN ─────────────────────────── */
     main { padding-top: 64px; min-height: 100vh; }
 
-    /* ── PAGE HERO ────────────────────── */
+    /* ── PAGE HERO ── */
     .page-hero {
         background: linear-gradient(135deg, #1f0f04 0%, var(--brown) 50%, var(--brown-md) 100%);
         padding: 2.8rem 3rem 2.2rem;
         position: relative; overflow: hidden;
     }
     .page-hero::before {
-        content:'';
-        position:absolute; top:-90px; right:-70px;
+        content:''; position:absolute; top:-90px; right:-70px;
         width:280px; height:280px; border-radius:50%;
         background: radial-gradient(circle, rgba(200,150,46,.28), transparent 65%);
         pointer-events:none;
     }
     .page-hero::after {
-        content:'';
-        position:absolute; bottom:-60px; left:20%;
+        content:''; position:absolute; bottom:-60px; left:20%;
         width:200px; height:200px; border-radius:50%;
         background: radial-gradient(circle, rgba(44,74,46,.2), transparent 65%);
         pointer-events:none;
@@ -205,7 +190,8 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         margin-top:.5rem; font-weight:300;
         animation: fadeUp .6s .25s both;
     }
-    /* Leyenda de estados */
+
+    /* Leyenda */
     .legend {
         display:flex; gap:1.2rem; flex-wrap:wrap;
         margin-top:1.4rem;
@@ -215,14 +201,12 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         display:flex; align-items:center; gap:.5rem;
         font-size:.78rem; color:rgba(245,239,224,.7);
     }
-    .legend-dot {
-        width:12px; height:12px; border-radius:3px; flex-shrink:0;
-    }
+    .legend-dot { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
     .ld-libre    { background:var(--green-lt); }
     .ld-ocupada  { background:var(--red); }
     .ld-selected { background:var(--gold); }
 
-    /* ── TABS (salas) ─────────────────── */
+    /* ── TABS ── */
     .sala-tabs {
         display:flex; gap:.6rem; flex-wrap:wrap;
         padding:1.4rem 3rem;
@@ -239,20 +223,16 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         font-size:.85rem; font-weight:500;
         cursor:pointer;
         transition:all .2s;
+        display: flex; align-items: center; gap: .5rem;
     }
-    .sala-tab:hover {
-        border-color:var(--gold);
-        background:rgba(200,150,46,.08);
-        color:var(--brown);
-    }
+    .sala-tab svg { width: 15px; height: 15px; stroke-width: 1.8; }
+    .sala-tab:hover { border-color:var(--gold); background:rgba(200,150,46,.08); color:var(--brown); }
     .sala-tab.active {
-        background:var(--gold);
-        border-color:var(--gold);
-        color:#fff;
+        background:var(--gold); border-color:var(--gold); color:#fff;
         box-shadow:0 4px 16px rgba(200,150,46,.4);
     }
 
-    /* ── LAYOUT: PLANO + PANEL ────────── */
+    /* ── WORKSPACE ── */
     .workspace {
         display:grid;
         grid-template-columns: 1fr 340px;
@@ -260,30 +240,27 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         min-height: calc(100vh - 64px - 180px);
     }
 
-    /* ── PLANO ────────────────────────── */
-    .floor-area {
-        padding: 2.5rem 3rem;
-        position:relative;
-    }
+    /* ── PLANO ── */
+    .floor-area { padding: 2.5rem 3rem; position:relative; }
     .floor-label {
         font-family:'Cormorant Garamond',serif;
         font-size:1.4rem; font-weight:400; color:var(--brown);
         margin-bottom:1.6rem;
         display:flex; align-items:center; gap:.8rem;
     }
+    .floor-label svg { width: 22px; height: 22px; stroke-width: 1.6; color: var(--gold); }
     .floor-label::after {
         content:''; flex:1; height:1px;
         background:linear-gradient(to right, var(--gold), transparent);
     }
 
-    /* Grid de mesas */
     .mesas-grid {
         display:grid;
         grid-template-columns: repeat(auto-fill, minmax(110px,1fr));
         gap:1.1rem;
     }
 
-    /* ── MESA CARD ────────────────────── */
+    /* ── MESA CARD ── */
     .mesa-card {
         aspect-ratio:1;
         border-radius:16px;
@@ -297,22 +274,17 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     }
     .mesa-card:hover { transform:translateY(-4px) scale(1.04); }
 
-    /* Estados */
     .mesa-card.libre {
         background: linear-gradient(145deg, #e8f5e9, #c8e6c9);
         border: 2px solid rgba(44,74,46,.25);
         box-shadow: 0 4px 18px rgba(44,74,46,.15);
     }
-    .mesa-card.libre:hover {
-        box-shadow: 0 10px 30px rgba(44,74,46,.25);
-        border-color: var(--green-lt);
-    }
+    .mesa-card.libre:hover { box-shadow: 0 10px 30px rgba(44,74,46,.25); border-color: var(--green-lt); }
     .mesa-card.ocupada {
         background: linear-gradient(145deg, #fce4e4, #f5c0c0);
         border: 2px solid rgba(139,26,26,.2);
         box-shadow: 0 4px 18px rgba(139,26,26,.1);
-        cursor:not-allowed;
-        opacity:.85;
+        cursor:not-allowed; opacity:.85;
     }
     .mesa-card.selected {
         background: linear-gradient(145deg, #fff8e1, #ffe082);
@@ -321,11 +293,19 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         animation: pulse-ring 1.8s ease-in-out infinite;
     }
 
-    .mesa-icon { font-size:2rem; line-height:1; }
+    /* Icono SVG dentro de la mesa card */
+    .mesa-icon {
+        width: 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .mesa-icon svg { width: 28px; height: 28px; stroke-width: 1.6; }
+    .libre   .mesa-icon svg { color: var(--green);    }
+    .ocupada .mesa-icon svg { color: var(--red);      }
+    .selected .mesa-icon svg{ color: var(--gold);     }
+
     .mesa-num {
         font-family:'Cormorant Garamond',serif;
-        font-size:1.1rem; font-weight:600;
-        color:var(--brown);
+        font-size:1.1rem; font-weight:600; color:var(--brown);
     }
     .mesa-status {
         font-size:.62rem; font-weight:600;
@@ -335,14 +315,13 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     .ocupada .mesa-status { color:var(--red);   }
     .selected .mesa-status{ color:var(--gold);  }
 
-    /* Número de la mesa en esquina */
     .mesa-badge {
         position:absolute; top:.5rem; right:.6rem;
         font-size:.65rem; font-weight:700;
         color:rgba(59,39,16,.45);
     }
 
-    /* ── PANEL RESERVA (derecha) ──────── */
+    /* ── PANEL RESERVA ── */
     .reserva-panel {
         background:#fff;
         border-left: 1px solid var(--warm);
@@ -361,7 +340,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         border-bottom:1px solid var(--warm); padding-bottom:.8rem;
     }
 
-    /* Mesa seleccionada preview */
+    /* Preview */
     .mesa-preview {
         background:linear-gradient(135deg, var(--warm), #efe2c2);
         border-radius:12px; padding:1rem 1.2rem;
@@ -374,28 +353,34 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         justify-content:center; flex-direction:column; gap:.3rem;
         text-align:center;
     }
-    .preview-icon { font-size:2.2rem; }
-    .preview-info {}
-    .preview-sala { font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--brown-md); }
-    .preview-mesa {
-        font-family:'Cormorant Garamond',serif;
-        font-size:1.3rem; font-weight:600; color:var(--brown);
+    .preview-icon {
+        width: 44px; height: 44px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
     }
+    .preview-icon svg { width: 32px; height: 32px; stroke-width: 1.5; color: var(--gold); }
+    .preview-sala { font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--brown-md); }
+    .preview-mesa { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:600; color:var(--brown); }
     .preview-estado {
         font-size:.72rem; color:var(--green); font-weight:600;
         letter-spacing:.06em; text-transform:uppercase;
+        display: flex; align-items: center; gap: .3rem;
     }
-    .empty-hint {
-        font-size:.82rem; color:#a08060;
-    }
+    .preview-estado svg { width: 12px; height: 12px; stroke-width: 2.5; }
+    .empty-hint { font-size:.82rem; color:#a08060; }
     .empty-hint strong { color:var(--gold); }
+    .empty-icon { width: 40px; height: 40px; opacity: .35; color: var(--brown-md); }
+    .empty-icon svg { width: 40px; height: 40px; stroke-width: 1.4; }
 
     /* Formulario */
     .form-group { display:flex; flex-direction:column; gap:.4rem; }
     .form-label {
         font-size:.78rem; font-weight:600;
         letter-spacing:.06em; text-transform:uppercase; color:var(--brown-md);
+        display: flex; align-items: center; gap: .4rem;
     }
+    .form-label svg { width: 14px; height: 14px; stroke-width: 2; }
+
     .form-input, .form-select, .form-textarea {
         padding:.7rem .9rem;
         border:1.5px solid var(--warm);
@@ -411,10 +396,9 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         box-shadow:0 0 0 3px rgba(200,150,46,.15);
     }
     .form-textarea { resize:vertical; min-height:70px; }
-
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
 
-    /* Btn reservar */
+    /* Botón reservar */
     .btn-reservar {
         width:100%; padding:.9rem;
         background:var(--gold); color:#fff; border:none;
@@ -426,78 +410,89 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         transition:background .2s, transform .2s, box-shadow .2s;
         display:flex; align-items:center; justify-content:center; gap:.5rem;
     }
+    .btn-reservar svg { width:17px; height:17px; stroke-width: 2.2; }
     .btn-reservar:hover:not(:disabled) {
         background:var(--brown);
         box-shadow:0 8px 28px rgba(59,39,16,.3);
         transform:translateY(-1px);
     }
-    .btn-reservar:disabled {
-        opacity:.5; cursor:not-allowed; transform:none;
-    }
-    .btn-reservar svg { width:17px; height:17px; }
+    .btn-reservar:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
-    /* Mensaje resultado */
+    /* Mensaje */
     .mensaje-reserva {
         border-radius:10px; padding:.85rem 1rem;
         font-size:.85rem; font-weight:500;
         display:flex; align-items:flex-start; gap:.6rem;
         animation: fadeIn .4s;
     }
+    .mensaje-reserva svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 2.2; margin-top: 1px; }
     .mensaje-reserva.ok {
-        background:rgba(44,74,46,.1);
-        border:1px solid rgba(44,74,46,.25);
-        color:var(--green);
+        background:rgba(44,74,46,.1); border:1px solid rgba(44,74,46,.25); color:var(--green);
     }
     .mensaje-reserva.error {
-        background:rgba(139,26,26,.08);
-        border:1px solid rgba(139,26,26,.2);
-        color:var(--red);
+        background:rgba(139,26,26,.08); border:1px solid rgba(139,26,26,.2); color:var(--red);
     }
-    /* ── MODAL CONFIRMACIÓN ── */
-.modal-overlay {
-    position: fixed; inset: 0; z-index: 3000;
-    background: rgba(59,39,16,.55);
-    backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center;
-    padding: 1rem;
-    animation: fadeIn .3s;
-}
-.modal-box {
-    background: #fff;
-    border-radius: 20px;
-    padding: 2.4rem 2rem;
-    max-width: 420px; width: 100%;
-    text-align: center;
-    box-shadow: 0 24px 60px rgba(59,39,16,.25);
-    animation: popIn .4s;
-}
-.modal-icon { font-size: 3rem; margin-bottom: .8rem; }
-.modal-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.7rem; font-weight: 600;
-    color: var(--brown); margin-bottom: .7rem;
-}
-.modal-body {
-    font-size: .9rem; color: var(--brown-md);
-    line-height: 1.7; margin-bottom: 1.6rem;
-}
-.modal-body a {
-    color: var(--gold); font-weight: 600;
-    text-decoration: underline;
-}
-.modal-btn {
-    padding: .75rem 2rem;
-    background: var(--gold); color: #fff; border: none;
-    border-radius: 3rem; cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: .88rem; font-weight: 600;
-    letter-spacing: .04em; text-transform: uppercase;
-    box-shadow: 0 6px 18px rgba(200,150,46,.35);
-    transition: background .2s, transform .2s;
-}
-.modal-btn:hover { background: var(--brown); transform: translateY(-1px); }
 
-    /* ── TOAST ────────────────────────── */
+    /* Info tel */
+    .info-tel {
+        background:rgba(200,150,46,.08); border-radius:10px; padding:1rem;
+        border:1px solid rgba(200,150,46,.2); margin-top:.4rem;
+        display: flex; align-items: flex-start; gap: .6rem;
+    }
+    .info-tel svg { width: 16px; height: 16px; color: var(--gold); flex-shrink:0; margin-top:2px; stroke-width: 1.8; }
+    .info-tel p { font-size:.78rem; color:var(--brown-md); line-height:1.6; }
+    .info-tel strong { color:var(--gold); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 3000;
+        background: rgba(59,39,16,.55);
+        backdrop-filter: blur(6px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem;
+        animation: fadeIn .3s;
+    }
+    .modal-box {
+        background: #fff; border-radius: 20px;
+        padding: 2.4rem 2rem; max-width: 420px; width: 100%;
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(59,39,16,.25);
+        animation: popIn .4s;
+    }
+    .modal-icon {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold), #92400e);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto .8rem;
+        box-shadow: 0 8px 24px rgba(200,150,46,.35);
+        color: #fff;
+    }
+    .modal-icon svg { width: 30px; height: 30px; stroke-width: 2; }
+    .modal-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.7rem; font-weight: 600;
+        color: var(--brown); margin-bottom: .7rem;
+    }
+    .modal-body {
+        font-size: .9rem; color: var(--brown-md);
+        line-height: 1.7; margin-bottom: 1.6rem;
+    }
+    .modal-body a { color: var(--gold); font-weight: 600; text-decoration: underline; }
+    .modal-btn {
+        padding: .75rem 2rem;
+        background: var(--gold); color: #fff; border: none;
+        border-radius: 3rem; cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .88rem; font-weight: 600;
+        letter-spacing: .04em; text-transform: uppercase;
+        box-shadow: 0 6px 18px rgba(200,150,46,.35);
+        transition: background .2s, transform .2s;
+        display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .modal-btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
+    .modal-btn:hover { background: var(--brown); transform: translateY(-1px); }
+
+    /* ── TOAST ── */
     #toast {
         position:fixed; bottom:2rem; left:50%;
         transform:translateX(-50%) translateY(20px);
@@ -507,16 +502,15 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         box-shadow:0 6px 24px rgba(59,39,16,.35);
         opacity:0; transition:opacity .3s, transform .3s;
         pointer-events:none; white-space:nowrap; z-index:2000;
+        display: flex; align-items: center; gap: .5rem;
     }
+    #toast svg { width: 15px; height: 15px; stroke-width: 2.2; flex-shrink: 0; }
     #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-    /* ── RESPONSIVE ───────────────────── */
+    /* ── RESPONSIVE ── */
     @media (max-width:900px) {
         .workspace { grid-template-columns:1fr; }
-        .reserva-panel {
-            position:static; height:auto;
-            border-left:none; border-top:1px solid var(--warm);
-        }
+        .reserva-panel { position:static; height:auto; border-left:none; border-top:1px solid var(--warm); }
         .floor-area, .sala-tabs { padding-left:1.4rem; padding-right:1.4rem; }
         .page-hero { padding:2rem 1.4rem; }
     }
@@ -529,16 +523,6 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
 
 <?php include '../includes/header_cliente.php'; ?>
 <?php include '../includes/sidebar_cliente.php'; ?>
-
-<!-- TOP BAR -->
-<header class="top-bar">
-    <a href="inicio.php" class="top-logo">La <span>Delicia</span></a>
-    <nav class="top-nav">
-        <a href="platos_usuario.php">Carta</a>
-        <a href="mis_reservas.php">Mis reservas</a>
-        <a href="nuevo_pedido.php" class="cta">Nuevo pedido</a>
-    </nav>
-</header>
 
 <main>
 
@@ -555,7 +539,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         </div>
     </div>
 
-    <!-- TABS de salas -->
+    <!-- TABS -->
     <div class="sala-tabs" id="salaTabs">
         <?php foreach ($salas as $i => $sala): ?>
         <button
@@ -563,7 +547,8 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
             onclick="setSala(<?= $sala['id'] ?>, this)"
             data-sala="<?= $sala['id'] ?>"
         >
-            🏛 <?= htmlspecialchars($sala['nombre']) ?>
+            <i data-lucide="landmark"></i>
+            <?= htmlspecialchars($sala['nombre']) ?>
             <small style="opacity:.7;font-size:.7rem;"> · <?= $sala['mesas'] ?> mesas</small>
         </button>
         <?php endforeach; ?>
@@ -580,7 +565,8 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
                  style="display:<?= $i===0?'block':'none' ?>">
 
                 <div class="floor-label">
-                    🏛 <?= htmlspecialchars($sala['nombre']) ?>
+                    <i data-lucide="layout-dashboard"></i>
+                    <?= htmlspecialchars($sala['nombre']) ?>
                 </div>
 
                 <div class="mesas-grid">
@@ -601,7 +587,13 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
                         style="animation-delay:<?= $delay ?>s"
                         title="<?= $estaOcupada ? 'Mesa ocupada' : 'Mesa '.$m.' — Haz clic para reservar' ?>"
                     >
-                        <span class="mesa-icon"><?= $estaOcupada ? '🚫' : '🪑' ?></span>
+                        <span class="mesa-icon">
+                            <?php if ($estaOcupada): ?>
+                                <i data-lucide="circle-x"></i>
+                            <?php else: ?>
+                                <i data-lucide="armchair"></i>
+                            <?php endif; ?>
+                        </span>
                         <span class="mesa-num">Mesa <?= $m ?></span>
                         <span class="mesa-status"><?= $estaOcupada ? 'Ocupada' : 'Libre' ?></span>
                         <span class="mesa-badge">#<?= $m ?></span>
@@ -620,14 +612,18 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
 
             <?php if ($mensajeReserva): ?>
             <div class="mensaje-reserva <?= $tipoMensaje ?>">
-                <?= $tipoMensaje==='ok' ? '✅' : '⚠️' ?>
+                <?php if ($tipoMensaje === 'ok'): ?>
+                    <i data-lucide="circle-check"></i>
+                <?php else: ?>
+                    <i data-lucide="triangle-alert"></i>
+                <?php endif; ?>
                 <?= $mensajeReserva ?>
             </div>
             <?php endif; ?>
 
-            <!-- Preview mesa seleccionada -->
+            <!-- Preview -->
             <div class="mesa-preview empty" id="mesaPreview">
-                <span style="font-size:2rem;opacity:.4;">🪑</span>
+                <div class="empty-icon"><i data-lucide="armchair"></i></div>
                 <span class="empty-hint">Haz clic en una mesa <strong>disponible</strong> para seleccionarla</span>
             </div>
 
@@ -641,19 +637,25 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">📅 Fecha *</label>
+                            <label class="form-label">
+                                <i data-lucide="calendar"></i> Fecha *
+                            </label>
                             <input type="date" name="fecha" id="inputFecha" class="form-input"
                                    min="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">🕐 Hora *</label>
+                            <label class="form-label">
+                                <i data-lucide="clock"></i> Hora *
+                            </label>
                             <input type="time" name="hora" id="inputHora" class="form-input"
                                    value="<?= date('H:i') ?>" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">👥 Número de personas *</label>
+                        <label class="form-label">
+                            <i data-lucide="users"></i> Número de personas *
+                        </label>
                         <select name="personas" class="form-select" required>
                             <?php for($p=1;$p<=10;$p++): ?>
                             <option value="<?=$p?>" <?=$p===2?'selected':''?>><?=$p?> persona<?=$p>1?'s':''?></option>
@@ -662,25 +664,25 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">📝 Nota especial</label>
+                        <label class="form-label">
+                            <i data-lucide="notebook-pen"></i> Nota especial
+                        </label>
                         <textarea name="nota" class="form-textarea"
                                   placeholder="Ej: cumpleaños, silla para bebé, alergia..."><?= $_POST['nota'] ?? '' ?></textarea>
                     </div>
 
                     <button type="submit" class="btn-reservar" id="btnReservar" disabled>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 6L9 17l-5-5"/>
-                        </svg>
+                        <i data-lucide="calendar-check"></i>
                         Confirmar Reserva
                     </button>
 
                 </div>
             </form>
 
-            <!-- Info adicional -->
-            <div style="background:rgba(200,150,46,.08);border-radius:10px;padding:1rem;border:1px solid rgba(200,150,46,.2);margin-top:.4rem;">
-                <p style="font-size:.78rem;color:var(--brown-md);line-height:1.6;">
-                    📞 También puedes llamar al <strong style="color:var(--gold);">957 847 894</strong> para reservar.<br>
+            <div class="info-tel">
+                <i data-lucide="phone"></i>
+                <p>
+                    También puedes llamar al <strong>957 847 894</strong> para reservar.<br>
                     Recuerda llegar 10 minutos antes de tu hora reservada.
                 </p>
             </div>
@@ -689,9 +691,13 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     </div>
 
 </main>
+
+<!-- MODAL -->
 <div class="modal-overlay" id="modalConfirmacion" style="display:none;">
     <div class="modal-box">
-        <div class="modal-icon">🎉</div>
+        <div class="modal-icon">
+            <i data-lucide="party-popper"></i>
+        </div>
         <div class="modal-title">¡Solicitud enviada!</div>
         <div class="modal-body">
             Tu reserva ha sido recibida con éxito.<br>
@@ -699,93 +705,89 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
             Mientras tanto, puedes revisar el estado de tu reserva en
             <a href="mis_reservas.php">Mis Reservas</a>.
         </div>
-        <button class="modal-btn" onclick="cerrarModal()">Entendido</button>
+        <button class="modal-btn" onclick="cerrarModal()">
+            <i data-lucide="check"></i>
+            Entendido
+        </button>
     </div>
 </div>
-<div id="toast"></div>
+
+<div id="toast">
+    <i data-lucide="info"></i>
+    <span id="toastMsg"></span>
+</div>
 
 <script>
-/* ══════════════════════════════
-   DATOS desde PHP
-══════════════════════════════ */
-var salas     = <?= $salasJson ?>;
-var ocupadas  = <?= $ocupadasJson ?>; // ["1-2","2-8",...]
-var salaActual = <?= $salas[0]['id'] ?? 1 ?>;
-var mesaSeleccionada = null; // { salaId, salaName, numMesa }
+var salas       = <?= $salasJson ?>;
+var ocupadas    = <?= $ocupadasJson ?>;
+var salaActual  = <?= $salas[0]['id'] ?? 1 ?>;
+var mesaSeleccionada = null;
 
-/* ── Cambiar sala ── */
 function setSala(salaId, btn) {
     salaActual = salaId;
-    // Tabs
     document.querySelectorAll('.sala-tab').forEach(function(t){ t.classList.remove('active'); });
     btn.classList.add('active');
-    // Planos
     document.querySelectorAll('.sala-plano').forEach(function(p){ p.style.display='none'; });
     document.getElementById('plano-' + salaId).style.display = 'block';
-    // Deseleccionar mesa si era de otra sala
     if (mesaSeleccionada && mesaSeleccionada.salaId !== salaId) {
         limpiarSeleccion();
     }
 }
 
-/* ── Seleccionar mesa ── */
 function seleccionarMesa(el) {
     if (el.dataset.ocupada === '1') {
-        showToast('⚠️ Esa mesa está ocupada');
-        el.style.animation = 'none';
+        showToast('Esa mesa está ocupada', 'ban');
         el.style.transform = 'translateX(-4px)';
-        setTimeout(function(){ el.style.transform=''; el.style.animation=''; }, 300);
+        setTimeout(function(){ el.style.transform=''; }, 300);
         return;
     }
 
-    // Quitar selección anterior
+    // Restaurar cards anteriores
     document.querySelectorAll('.mesa-card.selected').forEach(function(c){
         c.classList.remove('selected');
         c.classList.add('libre');
-        c.querySelector('.mesa-icon').textContent = '🪑';
+        c.querySelector('.mesa-icon').innerHTML = '<i data-lucide="armchair"></i>';
         c.querySelector('.mesa-status').textContent = 'Libre';
     });
 
-    // Seleccionar esta
     el.classList.remove('libre');
     el.classList.add('selected');
-    el.querySelector('.mesa-icon').textContent = '⭐';
+    el.querySelector('.mesa-icon').innerHTML = '<i data-lucide="star"></i>';
     el.querySelector('.mesa-status').textContent = 'Seleccionada';
 
-    var salaId    = parseInt(el.dataset.sala);
+    lucide.createIcons(); // Re-render nuevos iconos
+
+    var salaId     = parseInt(el.dataset.sala);
     var salaNombre = el.dataset.salaNombre;
-    var numMesa   = parseInt(el.dataset.mesa);
+    var numMesa    = parseInt(el.dataset.mesa);
 
     mesaSeleccionada = { salaId: salaId, salaName: salaNombre, numMesa: numMesa };
 
-    // Actualizar inputs ocultos
     document.getElementById('inputSala').value = salaId;
     document.getElementById('inputMesa').value = numMesa;
 
-    // Actualizar preview
     document.getElementById('mesaPreview').classList.remove('empty');
     document.getElementById('mesaPreview').innerHTML =
-        '<div class="preview-icon">🪑</div>' +
+        '<div class="preview-icon"><i data-lucide="armchair"></i></div>' +
         '<div class="preview-info">' +
             '<div class="preview-sala">' + salaNombre + '</div>' +
             '<div class="preview-mesa">Mesa ' + numMesa + '</div>' +
-            '<div class="preview-estado">✓ Disponible</div>' +
+            '<div class="preview-estado"><i data-lucide="circle-check"></i> Disponible</div>' +
         '</div>';
 
-    // Habilitar botón
+    lucide.createIcons();
     document.getElementById('btnReservar').disabled = false;
-
-    showToast('Mesa ' + numMesa + ' seleccionada');
+    showToast('Mesa ' + numMesa + ' seleccionada', 'check');
 }
 
-/* ── Limpiar selección ── */
 function limpiarSeleccion() {
     document.querySelectorAll('.mesa-card.selected').forEach(function(c){
         c.classList.remove('selected');
         c.classList.add('libre');
-        c.querySelector('.mesa-icon').textContent = '🪑';
+        c.querySelector('.mesa-icon').innerHTML = '<i data-lucide="armchair"></i>';
         c.querySelector('.mesa-status').textContent = 'Libre';
     });
+    lucide.createIcons();
     mesaSeleccionada = null;
     document.getElementById('inputSala').value = '';
     document.getElementById('inputMesa').value = '';
@@ -793,28 +795,32 @@ function limpiarSeleccion() {
     var preview = document.getElementById('mesaPreview');
     preview.classList.add('empty');
     preview.innerHTML =
-        '<span style="font-size:2rem;opacity:.4;">🪑</span>' +
+        '<div class="empty-icon"><i data-lucide="armchair"></i></div>' +
         '<span class="empty-hint">Haz clic en una mesa <strong>disponible</strong> para seleccionarla</span>';
+    lucide.createIcons();
 }
 
-/* ── Validar form ── */
 function validarForm() {
     if (!document.getElementById('inputSala').value ||
         !document.getElementById('inputMesa').value) {
-        showToast('⚠️ Selecciona una mesa primero');
+        showToast('Selecciona una mesa primero', 'triangle-alert');
         return false;
     }
     return true;
 }
 
-/* ── Toast ── */
-function showToast(msg) {
-    var t = document.getElementById('toast');
-    t.textContent = msg;
+function showToast(msg, icon) {
+    icon = icon || 'info';
+    var t   = document.getElementById('toast');
+    var svg = t.querySelector('i');
+    svg.setAttribute('data-lucide', icon);
+    document.getElementById('toastMsg').textContent = msg;
+    lucide.createIcons();
     t.classList.add('show');
     clearTimeout(window._tt);
     window._tt = setTimeout(function(){ t.classList.remove('show'); }, 2400);
 }
+
 function cerrarModal() {
     document.getElementById('modalConfirmacion').style.display = 'none';
 }
@@ -824,6 +830,9 @@ setTimeout(function(){
     document.getElementById('modalConfirmacion').style.display = 'flex';
 }, 300);
 <?php endif; ?>
+
+// Init
+lucide.createIcons();
 </script>
 
 </body>

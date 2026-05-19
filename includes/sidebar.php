@@ -39,6 +39,7 @@ $iniciales = strtoupper(
     transition: background .2s, transform .15s;
     border: 1px solid rgba(99,102,241,.25);
 }
+
 #toggleTNBtn:hover {
     background: rgba(99,102,241,.25);
     transform: scale(1.05);
@@ -53,7 +54,7 @@ $iniciales = strtoupper(
     display: block;
     width: 16px;
     height: 2px;
-    background: #6366f1;
+    background: #3876e7;
     border-radius: 2px;
     transition: transform .25s, opacity .25s;
 }
@@ -65,7 +66,7 @@ $iniciales = strtoupper(
     left: 0;
     width: 252px;
     height: 100vh;
-    background: linear-gradient(160deg, #0f1117 0%, #1a1d2e 60%, #111827 100%);
+    background: linear-gradient(160deg, #000000 0%, #000000 60%, #000000 100%);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -83,7 +84,7 @@ $iniciales = strtoupper(
     width: 240px;
     height: 240px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(99,102,241,.18) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(116, 118, 218, 0.18) 0%, transparent 70%);
     pointer-events: none;
 }
 #sidebar::after {
@@ -119,7 +120,7 @@ $iniciales = strtoupper(
     width: 34px;
     height: 34px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #0004e0, #5c6bf6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,7 +128,7 @@ $iniciales = strtoupper(
     font-weight: 700;
     color: #fff;
     flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(99,102,241,.4);
+    box-shadow: 0 4px 14px rgba(0, 4, 255, 0.4);
 }
 
 .sb-logo-text {
@@ -155,7 +156,7 @@ $iniciales = strtoupper(
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    background: linear-gradient(135deg, #0105fd, #1596ff);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -291,6 +292,8 @@ $iniciales = strtoupper(
 .i-pedidos { background: rgba(239,68,68,.15);  }
 .i-config  { background: rgba(148,163,184,.12);}
 .i-users   { background: rgba(167,139,250,.18);}
+.i-postres { background: rgba(236,72,153,.15); }
+.i-reportes { background: rgba(244,63,94,.15); }
 
 /* ── FOOTER / SALIR ── */
 .sb-footer {
@@ -316,6 +319,7 @@ $iniciales = strtoupper(
     border-color: rgba(239,68,68,.2);
     text-decoration: none !important;
 }
+.i-cuenta  { background: rgba(200,150,46,.15); }
 
 .sb-salir-icon {
     width: 32px;
@@ -412,6 +416,10 @@ $iniciales = strtoupper(
             <div class="sb-item-icon i-bebidas"><i data-lucide="cup-soda"></i></div>
             <span class="sb-item-label">Bebidas</span>
         </a>
+        <a href="postres.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'postres.php' ? 'active' : '' ?>">
+    <div class="sb-item-icon i-postres"><i data-lucide="ice-cream"></i></div>
+    <span class="sb-item-label">Postres</span>
+</a>
 
         <a href="salas.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'salas.php' ? 'active' : '' ?>">
             <div class="sb-item-icon i-salas"><i data-lucide="warehouse"></i></div>
@@ -437,13 +445,19 @@ $iniciales = strtoupper(
             <div class="sb-item-icon i-config"><i data-lucide="sliders-horizontal"></i></div>
             <span class="sb-item-label">Configuración</span>
         </a>
+<a href="usuarios.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'usuarios.php' ? 'active' : '' ?>">
+    <div class="sb-item-icon i-users"><i data-lucide="users-round"></i></div>
+    <span class="sb-item-label">Usuarios</span>
+</a>
 
-        <?php if ($rol === 'Administrador'): ?>
-        <a href="usuarios.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'usuarios.php' ? 'active' : '' ?>">
-            <div class="sb-item-icon i-users"><i data-lucide="users-round"></i></div>
-            <span class="sb-item-label">Usuarios</span>
-        </a>
-        <?php endif; ?>
+<a href="micuenta.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'micuenta.php' ? 'active' : '' ?>">
+    <div class="sb-item-icon i-cuenta"><i data-lucide="circle-user-round"></i></div>
+    <span class="sb-item-label">Mi cuenta</span>
+</a>
+<a href="reportes.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'reportes.php' ? 'active' : '' ?>">
+    <div class="sb-item-icon i-reportes"><i data-lucide="alert-circle"></i></div>
+    <span class="sb-item-label">Reportes</span>
+</a>
 
     </div>
 

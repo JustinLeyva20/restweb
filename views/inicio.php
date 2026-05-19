@@ -1,5 +1,6 @@
 <?php
 session_start();
+require "../config/conexion.php";
 
 // Seguridad
 if (!isset($_SESSION['usuario'])) {
@@ -14,10 +15,75 @@ if ($_SESSION['rol'] === 'Administrador') {
 }
 
 $nombre_usuario = $_SESSION['usuario'] ?? 'Cliente';
+$usuario = $_SESSION['usuario'];
 $hora = (int) date('H');
 if ($hora < 12)      $saludo = "Buenos días";
 elseif ($hora < 19)  $saludo = "Buenas tardes";
 else                 $saludo = "Buenas noches";
+
+$stats = [
+    'mesas' => 0,
+    'salas' => 0,
+    'platos' => 0,
+    'bebidas' => 0,
+];
+
+$statsRow = $conexion->query("
+    SELECT
+        COALESCE((SELECT SUM(mesas) FROM salas), 0) AS mesas,
+        COALESCE((SELECT COUNT(*) FROM salas), 0) AS salas,
+        COALESCE((SELECT COUNT(*) FROM platos), 0) AS platos,
+        COALESCE((SELECT COUNT(*) FROM bebidas), 0) AS bebidas
+")->fetch(PDO::FETCH_ASSOC);
+
+if ($statsRow) {
+    $stats['mesas'] = (int) $statsRow['mesas'];
+    $stats['salas'] = (int) $statsRow['salas'];
+    $stats['platos'] = (int) $statsRow['platos'];
+    $stats['bebidas'] = (int) $statsRow['bebidas'];
+}
+
+$platosDiaStmt = $conexion->query("
+    SELECT id, nombre, precio, fecha, imagen, 'plato' AS tipo
+    FROM platos
+    ORDER BY fecha DESC, id DESC
+    LIMIT 3
+");
+$platosDia = $platosDiaStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$bebidasDiaStmt = $conexion->query("
+    SELECT id, nombre, precio, fecha, imagen, 'bebida' AS tipo
+    FROM bebidas
+    ORDER BY fecha DESC, id DESC
+    LIMIT 1
+");
+$recomendados = array_merge($platosDia, $bebidasDiaStmt->fetchAll(PDO::FETCH_ASSOC));
+
+$pedidosRecientesStmt = $conexion->prepare("
+    SELECT p.*,
+           GROUP_CONCAT(CONCAT(d.cantidad, 'x ', d.nombre) SEPARATOR ' · ') AS detalle_resumen
+    FROM pedidos_web p
+    LEFT JOIN detalle_pedidos_web d ON d.id_pedido = p.id
+    WHERE p.usuario = ?
+    GROUP BY p.id
+    ORDER BY p.created_at DESC
+    LIMIT 2
+");
+$pedidosRecientesStmt->execute([$usuario]);
+$pedidosRecientes = $pedidosRecientesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$config = $conexion->query("
+    SELECT ruc, nombre, telefono, direccion, mensaje
+    FROM config
+    ORDER BY id ASC
+    LIMIT 1
+")->fetch(PDO::FETCH_ASSOC) ?: [
+    'ruc' => '',
+    'nombre' => 'Restaurante La Delicia',
+    'telefono' => '',
+    'direccion' => '',
+    'mensaje' => 'Gracias por su visita',
+];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -51,19 +117,19 @@ else                 $saludo = "Buenas noches";
             overflow-x: hidden;
         }
 
-        /* ── MAIN — ocupa todo el ancho (sidebar es overlay) ── */
+        /* ── MAIN ── */
         main {
             margin-left: 0;
             padding-top: 64px;
             min-height: 100vh;
         }
 
-        /* ── TOP BAR ─────────────────────────────── */
+        /* ── TOP BAR ── */
         .top-bar {
             position: fixed; top: 0; left: 0; right: 0; z-index: 900;
             height: 64px;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 2rem 0 4.5rem; /* 4.5rem: espacio para el btn hamburguesa */
+            padding: 0 2rem 0 4.5rem;
             background: rgba(245,239,224,.9);
             backdrop-filter: blur(14px);
             border-bottom: 1px solid rgba(200,150,46,.22);
@@ -88,7 +154,7 @@ else                 $saludo = "Buenas noches";
         }
         .top-nav .cta:hover { background: var(--brown); transform: translateY(-1px); }
 
-        /* ── HERO ─────────────────────────────────── */
+        /* ── HERO ── */
         .hero {
             position: relative; overflow: hidden;
             min-height: 520px;
@@ -106,7 +172,6 @@ else                 $saludo = "Buenas noches";
             opacity: .35; pointer-events: none;
         }
 
-        /* Orbes flotantes */
         .orb {
             position: absolute; border-radius: 50%;
             filter: blur(60px); pointer-events: none;
@@ -163,7 +228,6 @@ else                 $saludo = "Buenas noches";
         }
         .btn-ghost:hover { border-color: var(--gold-lt); color: var(--gold-lt); background: rgba(200,150,46,.08); }
 
-        /* Plato decorativo girando */
         .hero-visual {
             position: absolute; right: 6%; top: 50%;
             transform: translateY(-50%);
@@ -181,7 +245,7 @@ else                 $saludo = "Buenas noches";
             to   { opacity: 1; transform: translateY(0);    }
         }
 
-        /* ── STATS BAR ───────────────────────────── */
+        /* ── STATS BAR ── */
         .stats-bar {
             display: flex; justify-content: space-around; flex-wrap: wrap;
             background: var(--brown-md); padding: 1.4rem 3rem;
@@ -195,10 +259,10 @@ else                 $saludo = "Buenas noches";
         }
         .stat-label { font-size: .72rem; letter-spacing: .15em; text-transform: uppercase; color: rgba(245,239,224,.55); }
 
-        /* ── CONTENT ─────────────────────────────── */
+        /* ── CONTENT ── */
         .content { padding: 3rem 3.5rem; }
 
-        /* ── GREETING ────────────────────────────── */
+        /* ── GREETING ── */
         .greeting-card {
             background: linear-gradient(135deg, var(--warm) 0%, #f0e4c8 100%);
             border-left: 4px solid var(--gold);
@@ -221,7 +285,7 @@ else                 $saludo = "Buenas noches";
             min-width: 100px; text-align: right;
         }
 
-        /* ── SECTION HEADER ──────────────────────── */
+        /* ── SECTION HEADER ── */
         .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.6rem; }
         .section-header h3 {
             font-family: 'Cormorant Garamond', serif;
@@ -233,7 +297,7 @@ else                 $saludo = "Buenas noches";
             background: linear-gradient(to right, var(--gold), transparent);
         }
 
-        /* ── PLATOS GRID ─────────────────────────── */
+        /* ── PLATOS GRID ── */
         .platos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -255,21 +319,42 @@ else                 $saludo = "Buenas noches";
         .plato-card:nth-child(4){ animation-delay:.4s; }
         .plato-card:hover { transform: translateY(-6px); box-shadow: 0 12px 36px rgba(59,39,16,.2); }
 
+        /* ── IMAGEN DEL PLATO/BEBIDA ── */
         .plato-img {
-            height: 150px; width: 100%;
+            height: 160px; width: 100%;
             background: var(--warm);
             display: flex; align-items: center; justify-content: center;
             font-size: 4rem; position: relative; overflow: hidden;
         }
+        .plato-img img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform .4s ease;
+        }
+        .plato-card:hover .plato-img img {
+            transform: scale(1.06);
+        }
+        /* Overlay sutil sobre imagen */
         .plato-img::after {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to bottom, transparent 50%, rgba(59,39,16,.1) 100%);
+            background: linear-gradient(to bottom, transparent 50%, rgba(59,39,16,.15) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        /* Fallback emoji cuando no hay imagen */
+        .plato-img-fallback {
+            font-size: 4rem;
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--warm) 0%, #e8d4a8 100%);
         }
         .plato-badge {
             position: absolute; top: .7rem; right: .7rem;
             background: var(--gold); color: #fff;
             font-size: .65rem; font-weight: 600; letter-spacing: .1em;
             text-transform: uppercase; padding: .2rem .55rem; border-radius: 2rem;
+            z-index: 2;
         }
         .plato-body { padding: 1rem 1.1rem 1.2rem; }
         .plato-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; color: var(--brown); }
@@ -284,7 +369,7 @@ else                 $saludo = "Buenas noches";
         }
         .btn-add:hover { background: var(--gold); transform: rotate(90deg) scale(1.1); }
 
-        /* ── QUICK ACTIONS ───────────────────────── */
+        /* ── QUICK ACTIONS ── */
         .actions-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
@@ -294,20 +379,64 @@ else                 $saludo = "Buenas noches";
         .action-card {
             border-radius: 14px; padding: 1.6rem;
             display: flex; flex-direction: column; align-items: flex-start; gap: .8rem;
-            text-decoration: none; color: inherit;
+            text-decoration: none; color: var(--cream);
             transition: transform .3s, box-shadow .3s;
             animation: fadeUp .5s both;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            min-height: 160px;
         }
-        .action-card:nth-child(1){ animation-delay:.15s; background:linear-gradient(135deg,#2C4A2E,#1a2e1b); color:var(--cream); }
-        .action-card:nth-child(2){ animation-delay:.25s; background:linear-gradient(135deg,#8B1A1A,#5a0f0f); color:var(--cream); }
-        .action-card:nth-child(3){ animation-delay:.35s; background:linear-gradient(135deg,var(--brown-md),var(--brown)); color:var(--cream); }
-        .action-card:nth-child(4){ animation-delay:.45s; background:linear-gradient(135deg,var(--warm),#e8d4a8); color:var(--brown); }
-        .action-card:hover { transform: translateY(-5px); box-shadow: 0 14px 40px rgba(0,0,0,.22); }
-        .action-icon  { font-size: 2.2rem; }
-        .action-label { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 600; }
-        .action-desc  { font-size: .78rem; opacity: .7; line-height: 1.4; }
+        /* Overlay oscuro para legibilidad sobre la imagen */
+        .action-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(25, 12, 3, 0.58);
+            border-radius: 14px;
+            transition: background .3s;
+            z-index: 0;
+        }
+        .action-card:hover::before {
+            background: rgba(25, 12, 3, 0.38);
+        }
+        /* Borde dorado sutil */
+        .action-card::after {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 14px;
+            border: 1px solid rgba(200,150,46,.25);
+            pointer-events: none;
+            z-index: 1;
+            transition: border-color .3s;
+        }
+        .action-card:hover::after {
+            border-color: rgba(200,150,46,.6);
+        }
+        /* Todos los hijos por encima del overlay */
+        .action-card > * { position: relative; z-index: 2; }
 
-        /* ── PEDIDOS ─────────────────────────────── */
+        .action-card:nth-child(1){ animation-delay:.15s; }
+        .action-card:nth-child(2){ animation-delay:.25s; }
+        .action-card:nth-child(3){ animation-delay:.35s; }
+        .action-card:nth-child(4){ animation-delay:.45s; }
+        .action-card:nth-child(5){ animation-delay:.55s; }
+        .action-card:hover { transform: translateY(-5px); box-shadow: 0 14px 40px rgba(0,0,0,.32); }
+
+        .action-icon  { font-size: 2.2rem; }
+        .action-label {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem; font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 6px rgba(0,0,0,.4);
+        }
+        .action-desc  {
+            font-size: .78rem; opacity: .82; line-height: 1.4;
+            color: rgba(245,239,224,.9);
+            text-shadow: 0 1px 4px rgba(0,0,0,.5);
+        }
+
+        /* ── PEDIDOS ── */
         .pedidos-list { display: flex; flex-direction: column; gap: .9rem; margin-bottom: 3.5rem; }
         .pedido-row {
             background: #fff;
@@ -336,10 +465,13 @@ else                 $saludo = "Buenas noches";
             text-transform: uppercase; padding: .3rem .8rem; border-radius: 2rem;
         }
         .estado-PENDIENTE  { background: rgba(200,150,46,.15); color: var(--gold);  }
+        .estado-PREPARANDO { background: rgba(200,150,46,.15); color: var(--gold);  }
+        .estado-EN_CAMINO  { background: rgba(200,150,46,.15); color: var(--gold);  }
+        .estado-ENTREGADO  { background: rgba(44,74,46,.15);   color: var(--green); }
         .estado-FINALIZADO { background: rgba(44,74,46,.15);   color: var(--green); }
         .estado-CANCELADO  { background: rgba(139,26,26,.15);  color: var(--red);   }
 
-        /* ── FOOTER ──────────────────────────────── */
+        /* ── FOOTER ── */
         .site-footer {
             text-align: center; padding: 2rem;
             border-top: 1px solid var(--warm);
@@ -347,7 +479,7 @@ else                 $saludo = "Buenas noches";
         }
         .site-footer span { color: var(--gold); }
 
-        /* ── RESPONSIVE ──────────────────────────── */
+        /* ── RESPONSIVE ── */
         @media (max-width: 640px) {
             .content { padding: 1.5rem 1.2rem; }
             .hero { padding: 2rem 1.4rem; min-height: 380px; }
@@ -362,26 +494,15 @@ else                 $saludo = "Buenas noches";
 <?php include '../includes/header_cliente.php'; ?>
 <?php include '../includes/sidebar_cliente.php'; ?>
 
-<!-- TOP BAR -->
-<header class="top-bar">
-    <a href="inicio.php" class="top-logo">La <span>Delicia</span></a>
-    <nav class="top-nav">
-        <a href="carta.php">Carta</a>
-        <a href="mis_pedidos.php">Mis pedidos</a>
-        <a href="mis_pedidos.php" class="cta">Pedir ahora</a>
-    </nav>
-</header>
-
 <main>
 
-    <!-- ── HERO ─────────────────────────────────── -->
+    <!-- ── HERO ── -->
     <section class="hero">
         <div class="hero-bg"></div>
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
 
-        <!-- Plato decorativo girando -->
         <svg class="hero-visual" viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="140" cy="140" r="130" stroke="rgba(200,150,46,.18)" stroke-width="1"/>
             <circle cx="140" cy="140" r="110" stroke="rgba(200,150,46,.12)" stroke-width=".5"/>
@@ -397,145 +518,186 @@ else                 $saludo = "Buenas noches";
                 <em>enamora</em> el paladar
             </h1>
             <p class="hero-sub">
-                Explora nuestra carta, realiza tus pedidos y vive una experiencia gastronómica memorable desde tu mesa.
+                Explora nuestros platos y bebidas, realiza tus pedidos y reserva tu próxima visita.
             </p>
             <div class="hero-actions">
-                <a href="carta.php" class="btn-primary">🍴 Ver carta completa</a>
-                <a href="mis_pedidos.php" class="btn-ghost">Hacer un pedido →</a>
+                <a href="platos_usuario.php" class="btn-primary">Ver platos</a>
+                <a href="bebidas_usuario.php" class="btn-ghost">Ver bebidas →</a>
             </div>
         </div>
     </section>
 
-    <!-- ── STATS BAR ─────────────────────────────── -->
+    <!-- ── STATS BAR ── -->
     <div class="stats-bar">
-        <div class="stat"><span class="stat-num">25</span><span class="stat-label">Mesas disponibles</span></div>
-        <div class="stat"><span class="stat-num">2</span><span class="stat-label">Salas activas</span></div>
-        <div class="stat"><span class="stat-num">3+</span><span class="stat-label">Platos del día</span></div>
-        <div class="stat"><span class="stat-num">957&nbsp;847&nbsp;894</span><span class="stat-label">Reservas / Consultas</span></div>
+        <div class="stat"><span class="stat-num"><?= $stats['mesas'] ?></span><span class="stat-label">Mesas registradas</span></div>
+        <div class="stat"><span class="stat-num"><?= $stats['salas'] ?></span><span class="stat-label">Salas activas</span></div>
+        <div class="stat"><span class="stat-num"><?= $stats['platos'] ?></span><span class="stat-label">Platos disponibles</span></div>
+        <div class="stat"><span class="stat-num"><?= $stats['bebidas'] ?></span><span class="stat-label">Bebidas disponibles</span></div>
     </div>
 
-    <!-- ── CONTENIDO ─────────────────────────────── -->
+    <!-- ── CONTENIDO ── -->
     <div class="content">
 
         <!-- Saludo -->
         <div class="greeting-card">
             <div class="greeting-text">
-                <h2><?= $saludo ?>, <strong><?= htmlspecialchars($nombre_usuario) ?></strong> 👋</h2>
+                <h2><?= $saludo ?>, <strong><?= htmlspecialchars($nombre_usuario) ?></strong></h2>
                 <p>Hoy tenemos todo listo para ofrecerte la mejor experiencia. ¡Buen provecho!</p>
             </div>
             <div class="live-time" id="live-clock">--:--:--</div>
         </div>
 
-        <!-- Platos del día -->
-        <div class="section-header"><h3>Platos del día</h3></div>
+        <!-- Recomendados -->
+        <div class="section-header"><h3>Recomendados</h3></div>
         <div class="platos-grid">
 
-            <div class="plato-card">
-                <div class="plato-img">🍗<span class="plato-badge">Popular</span></div>
-                <div class="plato-body">
-                    <div class="plato-name">Arroz con Pollo</div>
-                    <div class="plato-desc">Clásico peruano con arroz verde, pollo jugoso y culantro aromático</div>
-                    <div class="plato-footer">
-                        <span class="plato-price">S/ 10.00</span>
-                        <button class="btn-add" title="Agregar al pedido">+</button>
-                    </div>
-                </div>
-            </div>
+            <?php
+            $platoFallbacks  = ['🍗','🍚','🥘','🍲','🥗','🍜'];
+            $bebidaFallbacks = ['🥤','🧃','☕','🧋','🍹','🥛'];
 
-            <div class="plato-card">
-                <div class="plato-img">🍚<span class="plato-badge">Chef</span></div>
-                <div class="plato-body">
-                    <div class="plato-name">Chaufa Especial</div>
-                    <div class="plato-desc">Arroz frito al wok con pollo, cebolla china y sillao premium</div>
-                    <div class="plato-footer">
-                        <span class="plato-price">S/ 20.00</span>
-                        <button class="btn-add" title="Agregar al pedido">+</button>
-                    </div>
-                </div>
-            </div>
+            foreach ($recomendados as $i => $item):
+                $esBebida = $item['tipo'] === 'bebida';
+                $carpeta  = $esBebida ? 'bebidas' : 'platos';
+                $fallbacks = $esBebida ? $bebidaFallbacks : $platoFallbacks;
+                $emoji    = $fallbacks[$i % count($fallbacks)];
+                $nombre   = htmlspecialchars($item['nombre']);
+                $precio   = number_format((float)$item['precio'], 2);
+                $detalle  = $esBebida
+                    ? 'Bebida disponible para acompañar tu pedido'
+                    : 'Plato disponible en nuestra carta';
+                $href     = $esBebida ? 'bebidas_usuario.php' : 'platos_usuario.php';
 
-            <div class="plato-card">
-                <div class="plato-img">🥤</div>
+                // Ruta de la imagen desde la carpeta uploads
+                $imgFile  = !empty($item['imagen']) ? trim($item['imagen']) : '';
+                $imgPath  = $imgFile ? "../uploads/{$carpeta}/" . htmlspecialchars($imgFile) : '';
+            ?>
+            <a class="plato-card" href="<?= $href ?>" style="text-decoration:none;color:inherit;">
+                <div class="plato-img">
+                    <?php if ($imgPath): ?>
+                        <img
+                            src="<?= $imgPath ?>"
+                            alt="<?= $nombre ?>"
+                            loading="lazy"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                        >
+                        <!-- Fallback emoji si la imagen falla -->
+                        <div class="plato-img-fallback" style="display:none; position:absolute; inset:0;">
+                            <?= $emoji ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="plato-img-fallback">
+                            <?= $emoji ?>
+                        </div>
+                    <?php endif; ?>
+                    <span class="plato-badge"><?= $esBebida ? 'Bebida' : 'Plato' ?></span>
+                </div>
                 <div class="plato-body">
-                    <div class="plato-name">Coca Cola 1.5 L</div>
-                    <div class="plato-desc">Gaseosa bien fría, perfecta para acompañar tu plato favorito</div>
+                    <div class="plato-name"><?= $nombre ?></div>
+                    <div class="plato-desc"><?= $detalle ?></div>
                     <div class="plato-footer">
-                        <span class="plato-price">S/ 8.00</span>
-                        <button class="btn-add" title="Agregar al pedido">+</button>
+                        <span class="plato-price">S/ <?= $precio ?></span>
+                        <button class="btn-add" title="Ver" onclick="return false;">+</button>
                     </div>
                 </div>
-            </div>
+            </a>
+            <?php endforeach; ?>
 
+            <?php if (empty($recomendados)): ?>
             <div class="plato-card">
-                <div class="plato-img">🥘</div>
+                <div class="plato-img">
+                    <div class="plato-img-fallback">🍽</div>
+                </div>
                 <div class="plato-body">
-                    <div class="plato-name">Combinado del día</div>
-                    <div class="plato-desc">Pregunta a tu mozo por las sorpresas especiales de hoy</div>
+                    <div class="plato-name">Carta en preparación</div>
+                    <div class="plato-desc">Aún no hay platos ni bebidas registrados.</div>
                     <div class="plato-footer">
-                        <span class="plato-price">Consultar</span>
-                        <button class="btn-add" title="Agregar al pedido">+</button>
+                        <span class="plato-price">Pronto</span>
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
         </div>
 
         <!-- Acciones rápidas -->
         <div class="section-header"><h3>Acciones rápidas</h3></div>
         <div class="actions-grid">
-            <a href="mis_pedidos.php" class="action-card">
-                <span class="action-icon">🛒</span>
-                <span class="action-label">Nuevo Pedido</span>
-                <span class="action-desc">Elige tu mesa, selecciona platos y confirma</span>
-            </a>
-            <a href="mis_pedidos.php" class="action-card">
-                <span class="action-icon">📋</span>
-                <span class="action-label">Mis Pedidos</span>
-                <span class="action-desc">Revisa el estado y detalle de tus pedidos</span>
-            </a>
-            <a href="carta.php" class="action-card">
-                <span class="action-icon">🍽</span>
-                <span class="action-label">Ver Carta</span>
+
+            <a href="platos_usuario.php" class="action-card"
+               style="background-image: url('../assets/img/platos.png');">
+                <span class="action-label">Ver Platos</span>
                 <span class="action-desc">Explora todos los platos y precios disponibles</span>
             </a>
-            <a href="mis_reservas.php" class="action-card">
-                <span class="action-icon">🗓</span>
+
+            <a href="bebidas_usuario.php" class="action-card"
+               style="background-image: url('../assets/img/bebidas.png');">
+                <span class="action-label">Ver Bebidas</span>
+                <span class="action-desc">Explora las bebidas disponibles para tu pedido</span>
+            </a>
+
+            <a href="mesas_cliente.php" class="action-card"
+               style="background-image: url('../assets/img/reservar.png');">
                 <span class="action-label">Reservar Mesa</span>
                 <span class="action-desc">Aparta tu espacio en sala principal o segundo piso</span>
             </a>
+
+            <a href="mis_pedidos.php" class="action-card"
+               style="background-image: url('../assets/img/pedidos.png');">
+                <span class="action-label">Mis Pedidos</span>
+                <span class="action-desc">Revisa el estado y detalle de tus pedidos</span>
+            </a>
+
+            <a href="mis_reservas.php" class="action-card"
+               style="background-image: url('../assets/img/reservas.png');">    
+                <span class="action-label">Mis Reservas</span>
+                <span class="action-desc">Consulta tus reservas realizadas</span>
+            </a>
+
         </div>
 
         <!-- Pedidos recientes -->
         <div class="section-header"><h3>Pedidos recientes</h3></div>
         <div class="pedidos-list">
 
+            <?php foreach ($pedidosRecientes as $pedido): ?>
+            <?php
+                $estado = $pedido['estado'] ?? 'PENDIENTE';
+                $dotClass = in_array($estado, ['ENTREGADO', 'FINALIZADO'], true)
+                    ? 'dot-finalizado'
+                    : ($estado === 'CANCELADO' ? 'dot-cancelado' : 'dot-pendiente');
+                $detalle = $pedido['detalle_resumen'] ?: 'Sin detalle registrado';
+            ?>
+            <div class="pedido-row">
+                <div class="pedido-dot <?= $dotClass ?>"></div>
+                <div class="pedido-info">
+                    <strong>Pedido #<?= (int)$pedido['id'] ?></strong>
+                    <span><?= htmlspecialchars($detalle) ?></span>
+                </div>
+                <span class="pedido-total">S/ <?= number_format((float)$pedido['total'], 2) ?></span>
+                <span class="pedido-estado estado-<?= htmlspecialchars($estado) ?>">
+                    <?= htmlspecialchars(str_replace('_', ' ', ucfirst(strtolower($estado)))) ?>
+                </span>
+            </div>
+            <?php endforeach; ?>
+
+            <?php if (empty($pedidosRecientes)): ?>
             <div class="pedido-row">
                 <div class="pedido-dot dot-pendiente"></div>
                 <div class="pedido-info">
-                    <strong>Mesa 8 — Segundo Piso</strong>
-                    <span>Pedido #2 · En preparación</span>
+                    <strong>Aún no tienes pedidos</strong>
+                    <span>Cuando confirmes un pedido, aparecerá aquí.</span>
                 </div>
-                <span class="pedido-total">S/ 30.00</span>
-                <span class="pedido-estado estado-PENDIENTE">Pendiente</span>
+                <a href="platos_usuario.php" class="btn-ghost" style="color:var(--brown);border-color:var(--warm);">Pedir ahora →</a>
             </div>
-
-            <div class="pedido-row">
-                <div class="pedido-dot dot-finalizado"></div>
-                <div class="pedido-info">
-                    <strong>Mesa 2 — Sala Principal</strong>
-                    <span>Pedido #1 · Chaufa, Arroz c/ Pollo ×5, Gaseosa</span>
-                </div>
-                <span class="pedido-total">S/ 78.00</span>
-                <span class="pedido-estado estado-FINALIZADO">Finalizado</span>
-            </div>
+            <?php endif; ?>
 
         </div>
 
     </div><!-- /content -->
 
     <footer class="site-footer">
-        RUC 65479877 · <span>Restaurante La Delicia</span> · Lima, Perú · ☎ 957 847 894
-        &nbsp;|&nbsp; Gracias por su visita 🙏
+        RUC <?= htmlspecialchars($config['ruc']) ?> · <span><?= htmlspecialchars($config['nombre']) ?></span> · <?= htmlspecialchars($config['direccion']) ?> · ☎ <?= htmlspecialchars($config['telefono']) ?>
+        &nbsp;|&nbsp; <?= htmlspecialchars($config['mensaje']) ?>
     </footer>
 
 </main>
@@ -552,7 +714,8 @@ else                 $saludo = "Buenas noches";
 
 /* ── Feedback btn-add ── */
 document.querySelectorAll('.btn-add').forEach(function(btn){
-    btn.addEventListener('click', function(){
+    btn.addEventListener('click', function(e){
+        e.preventDefault();
         this.textContent = '✓';
         this.style.background = 'var(--green)';
         var self = this;

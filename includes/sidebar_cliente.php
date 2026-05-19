@@ -224,6 +224,8 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
 .i-reservas { background: rgba(200,150,46,.15); color: #c8b46e; }
 .i-empresa  { background: rgba(59,39,16,.5);    color: #a08060; }
 .i-cuenta   { background: rgba(245,239,224,.08);color: #c8b49a; }
+.i-postres  { background: rgba(236,72,153,.18); color: #f9a8d4; }
+.i-reportes { background: rgba(244,63,94,.18);  color: #f87171; }
 
 /* ── FOOTER ── */
 .sb-footer {
@@ -296,6 +298,10 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
             <div class="sb-item-icon i-bebidas"><i data-lucide="cup-soda" style="width:15px;height:15px;"></i></div>
             Bebidas
         </a>
+        <a href="postres_cliente.php" class="sb-item <?= $paginaActual === 'postres_cliente.php' ? 'active' : '' ?>">
+    <div class="sb-item-icon i-postres"><i data-lucide="ice-cream" style="width:15px;height:15px;"></i></div>
+    Postres
+</a>
 
         <a href="mesas_cliente.php" class="sb-item <?= $paginaActual === 'mesas_cliente.php' ? 'active' : '' ?>">
             <div class="sb-item-icon i-mesas"><i data-lucide="calendar-check" style="width:15px;height:15px;"></i></div>
@@ -325,6 +331,10 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
             <div class="sb-item-icon i-cuenta"><i data-lucide="user" style="width:15px;height:15px;"></i></div>
             Mi Cuenta
         </a>
+        <a href="reportes_cliente.php" class="sb-item <?= $paginaActual === 'reportes_cliente.php' ? 'active' : '' ?>">
+    <div class="sb-item-icon i-reportes"><i data-lucide="alert-circle" style="width:15px;height:15px;"></i></div>
+    Reportes
+</a>
     </div>
 
     <div class="sb-footer">

@@ -17,6 +17,8 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
     <title>La Delicia — Nuestra Empresa</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
     :root {
         --cream:    #F5EFE0;
@@ -78,7 +80,9 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
         background:var(--gold); color:#fff;
         padding:.4rem 1.1rem; border-radius:2rem;
         font-size:.76rem; transition:background .2s, transform .2s;
+        display: flex; align-items: center; gap: .4rem;
     }
+    .top-nav .cta svg { width: 14px; height: 14px; stroke-width: 2.2; }
     .top-nav .cta:hover { background:var(--brown); transform:translateY(-1px); }
 
     main { padding-top: 64px; min-height: 100vh; }
@@ -151,10 +155,12 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
         width: 68px; height: 68px; border-radius: 16px; flex-shrink:0;
         background: linear-gradient(135deg, var(--gold), #92400e);
         display: flex; align-items: center; justify-content: center;
-        font-size: 30px;
+        color: #fff;
         box-shadow: 0 8px 20px rgba(200,150,46,.4);
         position: relative; z-index:1;
     }
+    .empresa-avatar svg { width: 32px; height: 32px; stroke-width: 1.6; }
+
     .banner-info { position: relative; z-index:1; }
     .banner-nombre {
         font-family: 'Cormorant Garamond', serif;
@@ -162,13 +168,14 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
         color: var(--cream); margin-bottom: .4rem;
     }
     .banner-ruc {
-        display: inline-block;
+        display: inline-flex; align-items: center; gap: .35rem;
         padding: 3px 12px; border-radius: 999px;
         background: rgba(200,150,46,.2);
         border: 1px solid rgba(200,150,46,.35);
         color: var(--gold-lt);
         font-size: .75rem; font-weight: 700; letter-spacing: .4px;
     }
+    .banner-ruc svg { width: 12px; height: 12px; stroke-width: 2.2; }
 
     /* FILAS */
     .data-body { padding: 0; }
@@ -186,12 +193,13 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
     .data-icon {
         width: 44px; height: 44px; border-radius: 12px; flex-shrink:0;
         display: flex; align-items: center; justify-content: center;
-        font-size: 20px;
     }
-    .icon-ruc  { background: rgba(200,150,46,.12); }
-    .icon-tel  { background: rgba(44,74,46,.1);    }
-    .icon-dir  { background: rgba(99,102,241,.1);  }
-    .icon-msg  { background: rgba(236,72,153,.1);  }
+    .data-icon svg { width: 20px; height: 20px; stroke-width: 1.8; }
+
+    .icon-ruc  { background: rgba(200,150,46,.12); color: var(--gold);     }
+    .icon-tel  { background: rgba(44,74,46,.1);    color: var(--green-lt); }
+    .icon-dir  { background: rgba(99,102,241,.1);  color: #6366f1;         }
+    .icon-msg  { background: rgba(236,72,153,.1);  color: #ec4899;         }
 
     .data-label {
         font-size: .7rem; font-weight: 700;
@@ -216,23 +224,13 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
 <?php include '../includes/header_cliente.php'; ?>
 <?php include '../includes/sidebar_cliente.php'; ?>
 
-<!-- TOP BAR -->
-<header class="top-bar">
-    <a href="inicio.php" class="top-logo">La <span>Delicia</span></a>
-    <nav class="top-nav">
-        <a href="platos_usuario.php">Carta</a>
-        <a href="mis_reservas.php">Mis reservas</a>
-        <a href="nuevo_pedido.php" class="cta">Nuevo pedido</a>
-    </nav>
-</header>
-
 <main>
 
     <!-- HERO -->
     <div class="page-hero">
         <div class="hero-inner">
             <h1>Nuestra <em>empresa</em></h1>
-            <p>Hola <?= $nombre_usuario ?> — aquí encontrarás toda la información de contacto del restaurante</p>
+            <p>Hola <?= $nombre_usuario ?>, aquí encontrarás toda la información de contacto del restaurante</p>
         </div>
     </div>
 
@@ -241,10 +239,15 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
 
             <!-- BANNER -->
             <div class="empresa-banner">
-                <div class="empresa-avatar">🍽️</div>
+                <div class="empresa-avatar">
+                    <i data-lucide="utensils-crossed"></i>
+                </div>
                 <div class="banner-info">
                     <div class="banner-nombre"><?= htmlspecialchars($datos_empresa['nombre']) ?></div>
-                    <span class="banner-ruc">RUC <?= htmlspecialchars($datos_empresa['ruc']) ?></span>
+                    <span class="banner-ruc">
+                        <i data-lucide="badge-check"></i>
+                        RUC <?= htmlspecialchars($datos_empresa['ruc']) ?>
+                    </span>
                 </div>
             </div>
 
@@ -252,7 +255,9 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
             <div class="data-body">
 
                 <div class="data-row" style="animation-delay:.1s">
-                    <div class="data-icon icon-ruc">🪪</div>
+                    <div class="data-icon icon-ruc">
+                        <i data-lucide="id-card"></i>
+                    </div>
                     <div>
                         <div class="data-label">RUC</div>
                         <div class="data-value"><?= htmlspecialchars($datos_empresa['ruc']) ?></div>
@@ -260,7 +265,9 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
                 </div>
 
                 <div class="data-row" style="animation-delay:.2s">
-                    <div class="data-icon icon-tel">📞</div>
+                    <div class="data-icon icon-tel">
+                        <i data-lucide="phone"></i>
+                    </div>
                     <div>
                         <div class="data-label">Teléfono</div>
                         <div class="data-value"><?= htmlspecialchars($datos_empresa['telefono']) ?></div>
@@ -268,7 +275,9 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
                 </div>
 
                 <div class="data-row" style="animation-delay:.3s">
-                    <div class="data-icon icon-dir">📍</div>
+                    <div class="data-icon icon-dir">
+                        <i data-lucide="map-pin"></i>
+                    </div>
                     <div>
                         <div class="data-label">Dirección</div>
                         <div class="data-value"><?= htmlspecialchars($datos_empresa['direccion']) ?></div>
@@ -276,7 +285,9 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
                 </div>
 
                 <div class="data-row" style="animation-delay:.4s">
-                    <div class="data-icon icon-msg">💬</div>
+                    <div class="data-icon icon-msg">
+                        <i data-lucide="message-circle"></i>
+                    </div>
                     <div>
                         <div class="data-label">Mensaje al cliente</div>
                         <div class="data-value"><?= htmlspecialchars($datos_empresa['mensaje']) ?></div>
@@ -288,6 +299,10 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
     </div>
 
 </main>
+
+<script>
+    lucide.createIcons();
+</script>
 
 </body>
 </html>

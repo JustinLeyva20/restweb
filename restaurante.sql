@@ -28,6 +28,7 @@ CREATE TABLE platos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(200) NOT NULL,
   precio DECIMAL(10,2) NOT NULL,
+  imagen VARCHAR(255) DEFAULT NULL,
   fecha DATE DEFAULT NULL
 );
 
@@ -37,6 +38,22 @@ CREATE TABLE bebidas (
   precio DECIMAL(10,2) NOT NULL,
   imagen VARCHAR(255) DEFAULT NULL,
   fecha DATE DEFAULT NULL
+);
+CREATE TABLE postres (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(200) NOT NULL,
+  precio DECIMAL(10,2) NOT NULL,
+  imagen VARCHAR(255) DEFAULT NULL,
+  fecha DATE DEFAULT NULL
+);
+CREATE TABLE reportes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario VARCHAR(100) NOT NULL,
+  correo VARCHAR(150) DEFAULT NULL,
+  asunto VARCHAR(200) NOT NULL,
+  descripcion TEXT NOT NULL,
+  estado ENUM('PENDIENTE','REVISADO','RESUELTO') DEFAULT 'PENDIENTE',
+  fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE pedidos (
@@ -101,15 +118,21 @@ VALUES ('65479877','Restaurante la Delicia','957847894','Lima - Perú','Gracias 
 INSERT INTO salas (nombre, mesas)
 VALUES ('SALA PRINCIPAL',15), ('SEGUNDO PISO',10);
 
-INSERT INTO platos (nombre, precio, fecha)
+INSERT INTO platos (nombre, precio, imagen, fecha)
 VALUES 
-('ARROZ CON POLLO',10.00,'2022-05-17'),
-('CHAUFA',20.00,'2022-05-17'),
-('GASEOSA COCA COLA 1.5 LITROS',8.00,'2022-05-17');
+('ARROZ CHAUFA',18.00,'chaufa.jpg',CURDATE()),
+('LOMO SALTADO',24.00,'lomo_saltado.jpg',CURDATE()),
+('AJI DE GALLINA',20.00,'aji_de_gallina.jpg',CURDATE()),
+('CEVICHE CLASICO',28.00,'ceviche.jpg',CURDATE()),
+('ARROZ CON POLLO',17.00,'arroz_con_pollo.jpg',CURDATE());
 
-INSERT INTO bebidas (nombre, precio, fecha)
+INSERT INTO bebidas (nombre, precio, imagen, fecha)
 VALUES
-('GASEOSA COCA COLA 1.5 LITROS',8.00,'2022-05-17');
+('CHICHA MORADA',8.00,'chicha_morada.jpg',CURDATE()),
+('EMOLIENTE',6.00,'emoliente.jpg',CURDATE()),
+('INCA KOLA',7.00,'inca_kola.jpg',CURDATE()),
+('JUGO DE MARACUYA',9.00,'jugo_maracuya.jpg',CURDATE()),
+('CHICHA DE JORA',10.00,'chicha_de_jora.jpg',CURDATE());
 
 INSERT INTO usuarios (nombre, correo, pass, rol)
 VALUES ('Admin', 'admin@test.com', '123456', 'Administrador');
@@ -125,15 +148,10 @@ VALUES
 ('ARROZ CON POLLO',10.00,5,'ARTO MAYONESA',1),
 ('GASEOSA COCA COLA 1.5 LITROS',8.00,1,'',1);
 
-select * from platos;
-select * from bebidas;
-select * from reservas;
-
-ALTER TABLE platos ADD COLUMN imagen VARCHAR(255) DEFAULT NULL;
-ALTER TABLE platos ADD COLUMN imagen VARCHAR(255) DEFAULT NULL;
 ALTER TABLE reservas ADD COLUMN motivo VARCHAR(255) DEFAULT NULL;
 ALTER TABLE pedidos_web ADD COLUMN nombre_cliente VARCHAR(150) NOT NULL AFTER usuario;
 ALTER TABLE pedidos_web ADD COLUMN telefono VARCHAR(15) NOT NULL AFTER nombre_cliente;
 ALTER TABLE usuarios 
 ADD COLUMN telefono VARCHAR(15) DEFAULT NULL,
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE usuarios ADD direccion VARCHAR(255) NULL;

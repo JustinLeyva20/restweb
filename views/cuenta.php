@@ -8,7 +8,7 @@ if ($_SESSION['rol'] === 'Administrador') { header("Location: dashboard.php"); e
 $nombre_usuario = htmlspecialchars($_SESSION['usuario'] ?? 'Cliente');
 
 // Obtener datos del usuario
-$stmt = $conexion->prepare("SELECT id, nombre, correo, telefono, created_at FROM usuarios WHERE nombre = ? LIMIT 1");
+$stmt = $conexion->prepare("SELECT id, nombre, correo, telefono, direccion, created_at FROM usuarios WHERE nombre = ? LIMIT 1");
 $stmt->execute([$nombre_usuario]);
 $mi_cuenta = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -16,13 +16,27 @@ $mi_cuenta = $stmt->fetch(PDO::FETCH_ASSOC);
 $msg      = null;
 $msg_tipo = 'ok';
 
-// Actualizar teléfono
+// Actualizar datos personales (nombre, teléfono, dirección)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'actualizar') {
-    $telefono = trim($_POST['telefono'] ?? '');
-    $conexion->prepare("UPDATE usuarios SET telefono = ? WHERE id = ?")
-             ->execute([$telefono, $mi_cuenta['id']]);
-    $mi_cuenta['telefono'] = $telefono;
-    $msg = "Teléfono actualizado correctamente.";
+    $nombre    = trim($_POST['nombre']    ?? '');
+    $telefono  = trim($_POST['telefono']  ?? '');
+    $direccion = trim($_POST['direccion'] ?? '');
+
+    if (empty($nombre)) {
+        $msg      = "El nombre no puede estar vacío.";
+        $msg_tipo = 'error';
+    } else {
+        $conexion->prepare("UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ? WHERE id = ?")
+                 ->execute([$nombre, $telefono, $direccion, $mi_cuenta['id']]);
+
+        // Actualizar sesión si cambió el nombre
+        $_SESSION['usuario']      = $nombre;
+        $mi_cuenta['nombre']      = $nombre;
+        $mi_cuenta['telefono']    = $telefono;
+        $mi_cuenta['direccion']   = $direccion;
+        $nombre_usuario           = htmlspecialchars($nombre);
+        $msg = "Datos actualizados correctamente.";
+    }
 }
 
 // Cambiar contraseña
@@ -36,17 +50,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     $row = $check->fetch(PDO::FETCH_ASSOC);
 
     if (!password_verify($pass_actual, $row['pass'])) {
-        $msg = "La contraseña actual no es correcta.";
+        $msg      = "La contraseña actual no es correcta.";
         $msg_tipo = 'error';
     } elseif ($pass_nueva !== $pass_repetir) {
-        $msg = "Las contraseñas nuevas no coinciden.";
+        $msg      = "Las contraseñas nuevas no coinciden.";
         $msg_tipo = 'error';
     } elseif (strlen($pass_nueva) < 6) {
-        $msg = "La nueva contraseña debe tener al menos 6 caracteres.";
+        $msg      = "La nueva contraseña debe tener al menos 6 caracteres.";
         $msg_tipo = 'error';
     } else {
-       $conexion->prepare("UPDATE usuarios SET pass = ? WHERE id = ?")
-         ->execute([password_hash($pass_nueva, PASSWORD_DEFAULT), $mi_cuenta['id']]);
+        $conexion->prepare("UPDATE usuarios SET pass = ? WHERE id = ?")
+                 ->execute([password_hash($pass_nueva, PASSWORD_DEFAULT), $mi_cuenta['id']]);
         $msg = "Contraseña actualizada correctamente.";
     }
 }
@@ -59,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     <title>La Delicia — Mi Cuenta</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
     :root {
         --cream:    #F5EFE0;
@@ -120,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         background:var(--gold); color:#fff;
         padding:.4rem 1.1rem; border-radius:2rem;
         font-size:.76rem; transition:background .2s, transform .2s;
+        display:flex; align-items:center; gap:.4rem;
     }
     .top-nav .cta:hover { background:var(--brown); transform:translateY(-1px); }
 
@@ -163,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.6rem;
-        max-width: 900px;
+        max-width: 920px;
     }
 
     /* CARDS */
@@ -192,10 +208,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         width: 46px; height: 46px; border-radius: 12px; flex-shrink:0;
         background: linear-gradient(135deg, var(--gold), #92400e);
         display: flex; align-items: center; justify-content: center;
-        font-size: 22px;
         box-shadow: 0 6px 16px rgba(200,150,46,.4);
         position: relative; z-index:1;
+        color: #fff;
     }
+    .card-header-icon svg { width: 22px; height: 22px; stroke-width: 1.8; }
     .card-header-title {
         font-family: 'Cormorant Garamond', serif;
         font-size: 1.2rem; font-weight: 600;
@@ -228,35 +245,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         margin-top: .2rem;
     }
 
-    /* FILAS DE DATOS */
+    /* FILAS DE DATOS (solo lectura: correo y fecha) */
     .data-row {
         display: flex; align-items: center; gap: 1rem;
         padding: 1rem 1.8rem;
         border-bottom: 1px solid var(--warm);
         transition: background .15s;
     }
-    .data-row:last-child { border-bottom: none; }
     .data-row:hover { background: rgba(200,150,46,.04); }
 
     .data-icon {
         width: 38px; height: 38px; border-radius: 10px; flex-shrink:0;
         display: flex; align-items: center; justify-content: center;
-        font-size: 17px;
     }
-    .icon-nombre  { background: rgba(200,150,46,.12); }
-    .icon-correo  { background: rgba(99,102,241,.1);  }
-    .icon-tel     { background: rgba(44,74,46,.1);    }
-    .icon-fecha   { background: rgba(236,72,153,.1);  }
+    .data-icon svg { width: 18px; height: 18px; stroke-width: 1.8; }
+
+    .icon-correo { background: rgba(99,102,241,.1);  color: #6366f1; }
+    .icon-fecha  { background: rgba(236,72,153,.1);  color: #ec4899; }
 
     .data-label {
         font-size: .68rem; font-weight: 700;
         letter-spacing: .5px; text-transform: uppercase;
         color: #a08060; margin-bottom: .2rem;
     }
-    .data-value {
-        color: var(--brown); font-size: .9rem; font-weight: 500;
-    }
+    .data-value { color: var(--brown); font-size: .9rem; font-weight: 500; }
     .data-value.muted { color: #b0a090; font-style: italic; }
+
+    /* Separador dentro del form */
+    .form-divider {
+        height: 1px;
+        background: var(--warm);
+        margin: .2rem 0;
+    }
 
     /* FORMULARIO */
     .form-body { padding: 1.4rem 1.8rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -265,7 +285,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     .form-label {
         font-size: .72rem; font-weight: 700;
         letter-spacing: .5px; text-transform: uppercase; color: var(--brown-md);
+        display: flex; align-items: center; gap: .4rem;
     }
+    .form-label svg { width: 14px; height: 14px; stroke-width: 2; }
+
     .form-input {
         padding: .65rem .9rem;
         border: 1.5px solid var(--warm);
@@ -290,11 +313,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         text-transform: uppercase;
         box-shadow: 0 6px 18px rgba(200,150,46,.35);
         transition: background .2s, transform .2s;
+        display: flex; align-items: center; justify-content: center; gap: .5rem;
     }
-    .btn-submit:hover {
-        background: var(--brown);
-        transform: translateY(-1px);
-    }
+    .btn-submit svg { width: 16px; height: 16px; stroke-width: 2.2; }
+    .btn-submit:hover { background: var(--brown); transform: translateY(-1px); }
 
     /* MENSAJE */
     .msg {
@@ -303,7 +325,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         border-radius: 10px;
         font-size: .84rem; font-weight: 500;
         animation: fadeIn .4s;
+        display: flex; align-items: center; gap: .5rem;
     }
+    .msg svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 2.2; }
     .msg.ok {
         background: rgba(44,74,46,.1);
         border: 1px solid rgba(44,74,46,.25);
@@ -315,15 +339,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         color: var(--red);
     }
 
-    /* SPAN COMPLETO */
-    .full-width { grid-column: 1 / -1; }
+    /* BADGE solo lectura */
+    .readonly-badge {
+        display: inline-flex; align-items: center; gap: .3rem;
+        font-size: .62rem; font-weight: 700; letter-spacing: .4px;
+        text-transform: uppercase;
+        background: rgba(160,128,96,.12);
+        color: #a08060;
+        padding: .15rem .5rem; border-radius: 2rem;
+        margin-left: .4rem;
+        vertical-align: middle;
+    }
+    .readonly-badge svg { width: 10px; height: 10px; stroke-width: 2.5; }
 
     /* RESPONSIVE */
     @media (max-width:900px) {
-        .content-wrapper {
-            grid-template-columns: 1fr;
-            padding: 1.4rem;
-        }
+        .content-wrapper { grid-template-columns: 1fr; padding: 1.4rem; }
         .page-hero { padding: 2rem 1.4rem; }
     }
     </style>
@@ -333,74 +364,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
 <?php include '../includes/header_cliente.php'; ?>
 <?php include '../includes/sidebar_cliente.php'; ?>
 
-<header class="top-bar">
-    <a href="inicio.php" class="top-logo">La <span>Delicia</span></a>
-    <nav class="top-nav">
-        <a href="platos_usuario.php">Carta</a>
-        <a href="mis_reservas.php">Mis reservas</a>
-        <a href="nuevo_pedido.php" class="cta">Nuevo pedido</a>
-    </nav>
-</header>
-
 <main>
 
     <div class="page-hero">
         <div class="hero-inner">
             <h1>Mi <em>cuenta</em></h1>
-            <p>Hola <?= $nombre_usuario ?> — gestiona tu información personal y tu contraseña</p>
+            <p>Hola <?= $nombre_usuario ?>, gestiona tu información personal y tu contraseña</p>
         </div>
     </div>
 
     <div class="content-wrapper">
 
-        <!-- CARD: DATOS DEL USUARIO -->
+        <!-- ── CARD: DATOS PERSONALES ── -->
         <div class="cuenta-card" style="animation-delay:.1s">
 
             <div class="card-header">
-                <div class="card-header-icon">👤</div>
+                <div class="card-header-icon">
+                    <i data-lucide="circle-user-round"></i>
+                </div>
                 <div class="card-header-title">Información personal</div>
             </div>
 
             <!-- Avatar -->
             <div class="avatar-section">
                 <div class="avatar-circle">
-                    <?= mb_strtoupper(mb_substr($mi_cuenta['nombre'] , 0, 1)) ?>
+                    <?= mb_strtoupper(mb_substr($mi_cuenta['nombre'], 0, 1)) ?>
                 </div>
                 <div class="avatar-name"><?= htmlspecialchars($mi_cuenta['nombre']) ?></div>
                 <div class="avatar-rol"><?= htmlspecialchars($_SESSION['rol']) ?></div>
             </div>
 
-            <!-- Datos -->
+            <!-- Solo lectura: Correo -->
             <div class="data-row">
-                <div class="data-icon icon-nombre">👤</div>
-                <div>
-                    <div class="data-label">Nombre completo</div>
-                    <div class="data-value"><?= htmlspecialchars($mi_cuenta['nombre']) ?></div>
+                <div class="data-icon icon-correo">
+                    <i data-lucide="mail"></i>
                 </div>
-            </div>
-
-            <div class="data-row">
-                <div class="data-icon icon-correo">✉️</div>
                 <div>
-                    <div class="data-label">Correo electrónico</div>
                     <div class="data-value"><?= htmlspecialchars($mi_cuenta['correo']) ?></div>
                 </div>
             </div>
 
+            <!-- Solo lectura: Miembro desde -->
             <div class="data-row">
-                <div class="data-icon icon-tel">📞</div>
-                <div>
-                    <div class="data-label">Teléfono</div>
-                    <div class="data-value <?= $mi_cuenta['telefono'] ? '' : 'muted' ?>">
-                        <?= $mi_cuenta['telefono'] ? htmlspecialchars($mi_cuenta['telefono']) : 'No registrado' ?>
-                    </div>
+                <div class="data-icon icon-fecha">
+                    <i data-lucide="calendar"></i>
                 </div>
-            </div>
-
-            <div class="data-row">
-                <div class="data-icon icon-fecha">📅</div>
                 <div>
-                    <div class="data-label">Miembro desde</div>
+                    <div class="data-label">
+                        Miembro desde
+                    </div>
                     <div class="data-value">
                         <?= $mi_cuenta['created_at']
                             ? date('d/m/Y', strtotime($mi_cuenta['created_at']))
@@ -409,65 +421,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
                 </div>
             </div>
 
-            <!-- Actualizar teléfono -->
+            <div class="form-divider"></div>
+
+            <!-- Mensaje de actualización -->
             <?php if ($msg && ($_POST['accion'] ?? '') === 'actualizar'): ?>
-            <div class="msg <?= $msg_tipo ?>"><?= $msg ?></div>
+            <div class="msg <?= $msg_tipo ?>" style="margin-top:1rem;">
+                <?php if ($msg_tipo === 'ok'): ?>
+                    <i data-lucide="circle-check"></i>
+                <?php else: ?>
+                    <i data-lucide="circle-alert"></i>
+                <?php endif; ?>
+                <?= htmlspecialchars($msg) ?>
+            </div>
             <?php endif; ?>
 
+            <!-- Formulario: nombre, teléfono, dirección -->
             <form method="POST" class="form-body">
                 <input type="hidden" name="accion" value="actualizar">
+
                 <div class="form-group">
-                    <label class="form-label">📞 Actualizar teléfono</label>
+                    <label class="form-label">
+                        <i data-lucide="user"></i>
+                        Nombre completo
+                    </label>
+                    <input type="text" name="nombre" class="form-input"
+                           placeholder="Tu nombre completo"
+                           value="<?= htmlspecialchars($mi_cuenta['nombre'] ?? '') ?>"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-lucide="phone"></i>
+                        Teléfono
+                    </label>
                     <input type="tel" name="telefono" class="form-input"
                            placeholder="Ej: 987654321"
                            value="<?= htmlspecialchars($mi_cuenta['telefono'] ?? '') ?>">
                 </div>
-                <button type="submit" class="btn-submit">Guardar teléfono</button>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-lucide="map-pin"></i>
+                        Dirección
+                    </label>
+                    <input type="text" name="direccion" class="form-input"
+                           placeholder="Ej: Av. Los Olivos 123, Lima"
+                           value="<?= htmlspecialchars($mi_cuenta['direccion'] ?? '') ?>">
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i data-lucide="save"></i>
+                    Guardar cambios
+                </button>
             </form>
 
         </div>
 
-        <!-- CARD: CAMBIAR CONTRASEÑA -->
+        <!-- ── CARD: CAMBIAR CONTRASEÑA ── -->
         <div class="cuenta-card" style="animation-delay:.2s">
 
             <div class="card-header">
-                <div class="card-header-icon">🔐</div>
+                <div class="card-header-icon">
+                    <i data-lucide="lock-keyhole"></i>
+                </div>
                 <div class="card-header-title">Cambiar contraseña</div>
             </div>
 
             <?php if ($msg && ($_POST['accion'] ?? '') === 'cambiar_pass'): ?>
-            <div class="msg <?= $msg_tipo ?>"><?= $msg ?></div>
+            <div class="msg <?= $msg_tipo ?>" style="margin-top:1rem;">
+                <?php if ($msg_tipo === 'ok'): ?>
+                    <i data-lucide="circle-check"></i>
+                <?php else: ?>
+                    <i data-lucide="circle-alert"></i>
+                <?php endif; ?>
+                <?= htmlspecialchars($msg) ?>
+            </div>
             <?php endif; ?>
 
             <form method="POST" class="form-body">
                 <input type="hidden" name="accion" value="cambiar_pass">
 
                 <div class="form-group">
-                    <label class="form-label">🔑 Contraseña actual</label>
+                    <label class="form-label">
+                        <i data-lucide="key-round"></i>
+                        Contraseña actual
+                    </label>
                     <input type="password" name="pass_actual" class="form-input"
                            placeholder="Tu contraseña actual" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">🔒 Nueva contraseña</label>
+                    <label class="form-label">
+                        <i data-lucide="lock"></i>
+                        Nueva contraseña
+                    </label>
                     <input type="password" name="pass_nueva" class="form-input"
                            placeholder="Mínimo 6 caracteres" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">🔒 Repetir nueva contraseña</label>
+                    <label class="form-label">
+                        <i data-lucide="lock-keyhole"></i>
+                        Repetir nueva contraseña
+                    </label>
                     <input type="password" name="pass_repetir" class="form-input"
                            placeholder="Repite la nueva contraseña" required>
                 </div>
 
-                <button type="submit" class="btn-submit">Cambiar contraseña</button>
+                <button type="submit" class="btn-submit">
+                    <i data-lucide="shield-check"></i>
+                    Cambiar contraseña
+                </button>
             </form>
 
         </div>
 
-    </div>
+    </div><!-- /content-wrapper -->
 
 </main>
+
+<script>
+    lucide.createIcons();
+</script>
 
 </body>
 </html>

@@ -31,6 +31,8 @@ $pedidos = $pedidos->fetchAll(PDO::FETCH_ASSOC);
 <title>La Delicia — Mis Pedidos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
 :root {
     --cream:    #F5EFE0;
@@ -56,6 +58,10 @@ body {
     from { opacity:0; transform:translateY(16px); }
     to   { opacity:1; transform:translateY(0); }
 }
+
+/* Lucide helpers */
+.lc { display: inline-flex; align-items: center; justify-content: center; }
+.lc svg { display: block; }
 
 /* TOP BAR */
 .top-bar {
@@ -114,7 +120,9 @@ main { padding-top: 64px; min-height: 100vh; }
     font-family: 'DM Sans', sans-serif;
     font-size: .82rem; font-weight: 500;
     cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; gap: .4rem;
 }
+.filtro-btn svg { width: 14px; height: 14px; stroke-width: 2; }
 .filtro-btn:hover {
     border-color: var(--gold);
     background: rgba(200,150,46,.08); color: var(--brown);
@@ -127,12 +135,19 @@ main { padding-top: 64px; min-height: 100vh; }
 /* CONTENT */
 .content { padding: 2.5rem 3rem 4rem; }
 
-/* EMPTY */
+/* EMPTY STATE */
 .empty-state {
     text-align: center; padding: 5rem 1rem;
     animation: fadeUp .5s both;
 }
-.empty-state .es-icon { font-size: 4rem; opacity: .4; margin-bottom: 1rem; }
+.empty-state .es-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(200,150,46,.1);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+    color: var(--gold);
+}
+.empty-state .es-icon svg { width: 36px; height: 36px; stroke-width: 1.5; }
 .empty-state h3 {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.6rem; color: var(--brown-md); margin-bottom: .5rem;
@@ -146,6 +161,7 @@ main { padding-top: 64px; min-height: 100vh; }
     box-shadow: 0 6px 20px rgba(200,150,46,.4);
     transition: background .2s, transform .2s;
 }
+.btn-ir-carta svg { width: 16px; height: 16px; stroke-width: 2; }
 .btn-ir-carta:hover { background: var(--brown); transform: translateY(-2px); }
 
 /* GRID */
@@ -168,16 +184,16 @@ main { padding-top: 64px; min-height: 100vh; }
     box-shadow: 0 12px 36px var(--shadow);
 }
 
-/* Header de la card */
+/* Header card */
 .pc-header {
     padding: 1rem 1.3rem;
     display: flex; align-items: center; justify-content: space-between;
 }
-.pc-header.PENDIENTE   { background: linear-gradient(135deg,#fffbeb,#fef3c7); border-bottom:2px solid #fde68a; }
-.pc-header.PREPARANDO  { background: linear-gradient(135deg,#eff6ff,#dbeafe); border-bottom:2px solid #bfdbfe; }
-.pc-header.EN_CAMINO   { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-bottom:2px solid #bbf7d0; }
-.pc-header.ENTREGADO   { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-bottom:2px solid #bbf7d0; }
-.pc-header.CANCELADO   { background: linear-gradient(135deg,#fff1f2,#ffe4e6); border-bottom:2px solid #fecdd3; }
+.pc-header.PENDIENTE  { background: linear-gradient(135deg,#fffbeb,#fef3c7); border-bottom:2px solid #fde68a; }
+.pc-header.PREPARANDO { background: linear-gradient(135deg,#eff6ff,#dbeafe); border-bottom:2px solid #bfdbfe; }
+.pc-header.EN_CAMINO  { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-bottom:2px solid #bbf7d0; }
+.pc-header.ENTREGADO  { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-bottom:2px solid #bbf7d0; }
+.pc-header.CANCELADO  { background: linear-gradient(135deg,#fff1f2,#ffe4e6); border-bottom:2px solid #fecdd3; }
 
 .pc-id {
     font-family: 'Cormorant Garamond', serif;
@@ -190,7 +206,9 @@ main { padding-top: 64px; min-height: 100vh; }
     font-size: .68rem; font-weight: 700; letter-spacing: .08em;
     text-transform: uppercase; padding: .3rem .8rem; border-radius: 2rem;
     white-space: nowrap;
+    display: inline-flex; align-items: center; gap: .35rem;
 }
+.pc-badge svg { width: 12px; height: 12px; stroke-width: 2.5; }
 .badge-PENDIENTE  { background:rgba(234,179,8,.15);  color:#92400e; }
 .badge-PREPARANDO { background:rgba(59,130,246,.12); color:#1e40af; }
 .badge-EN_CAMINO  { background:rgba(34,197,94,.12);  color:#166534; }
@@ -202,16 +220,19 @@ main { padding-top: 64px; min-height: 100vh; }
 
 .pc-row {
     display: flex; align-items: flex-start; gap: .6rem;
-    padding: .4rem 0;
+    padding: .45rem 0;
     border-bottom: 1px solid var(--warm);
     font-size: .86rem; color: var(--brown-md);
 }
 .pc-row:last-child { border-bottom: none; }
-.pc-icon { font-size: .95rem; width: 20px; flex-shrink: 0; margin-top: .05rem; }
-.pc-row strong { color: var(--brown); font-weight: 600; }
-.pc-row .detalle-text {
-    color: #a08060; font-size: .8rem; line-height: 1.5;
+.pc-icon {
+    width: 20px; flex-shrink: 0; margin-top: .05rem;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--brown-md);
 }
+.pc-icon svg { width: 15px; height: 15px; stroke-width: 1.8; }
+.pc-row strong { color: var(--brown); font-weight: 600; }
+.pc-row .detalle-text { color: #a08060; font-size: .8rem; line-height: 1.5; }
 
 /* Footer */
 .pc-footer {
@@ -229,7 +250,9 @@ main { padding-top: 64px; min-height: 100vh; }
     font-size: .75rem; color: var(--brown-md);
     background: var(--warm); padding: .3rem .8rem;
     border-radius: 2rem; font-weight: 500;
+    display: inline-flex; align-items: center; gap: .35rem;
 }
+.pc-metodo svg { width: 13px; height: 13px; stroke-width: 1.8; }
 
 /* Empty filtro */
 .empty-filtro {
@@ -239,7 +262,9 @@ main { padding-top: 64px; min-height: 100vh; }
 .empty-filtro p {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.3rem; color: var(--brown-md);
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
 }
+.empty-filtro svg { width: 20px; height: 20px; stroke-width: 1.8; color: var(--gold); }
 
 @media (max-width: 640px) {
     .content { padding: 1.5rem 1.2rem 3rem; }
@@ -254,10 +279,6 @@ main { padding-top: 64px; min-height: 100vh; }
 <?php include '../includes/header_cliente.php'; ?>
 <?php include '../includes/sidebar_cliente.php'; ?>
 
-<header class="top-bar">
-    <a href="inicio.php" class="top-logo">La <span>Delicia</span></a>
-</header>
-
 <main>
 
     <div class="page-hero">
@@ -269,12 +290,24 @@ main { padding-top: 64px; min-height: 100vh; }
 
     <!-- FILTROS -->
     <div class="filtros-bar">
-        <button class="filtro-btn active" onclick="filtrar('todos', this)">🗂 Todos</button>
-        <button class="filtro-btn" onclick="filtrar('PENDIENTE',  this)">🟡 Pendientes</button>
-        <button class="filtro-btn" onclick="filtrar('PREPARANDO', this)">🔵 Preparando</button>
-        <button class="filtro-btn" onclick="filtrar('EN_CAMINO',  this)">🟢 En camino</button>
-        <button class="filtro-btn" onclick="filtrar('ENTREGADO',  this)">✅ Entregados</button>
-        <button class="filtro-btn" onclick="filtrar('CANCELADO',  this)">🔴 Cancelados</button>
+        <button class="filtro-btn active" onclick="filtrar('todos', this)">
+            <i data-lucide="layout-grid"></i> Todos
+        </button>
+        <button class="filtro-btn" onclick="filtrar('PENDIENTE', this)">
+            <i data-lucide="clock"></i> Pendientes
+        </button>
+        <button class="filtro-btn" onclick="filtrar('PREPARANDO', this)">
+            <i data-lucide="chef-hat"></i> Preparando
+        </button>
+        <button class="filtro-btn" onclick="filtrar('EN_CAMINO', this)">
+            <i data-lucide="bike"></i> En camino
+        </button>
+        <button class="filtro-btn" onclick="filtrar('ENTREGADO', this)">
+            <i data-lucide="circle-check"></i> Entregados
+        </button>
+        <button class="filtro-btn" onclick="filtrar('CANCELADO', this)">
+            <i data-lucide="circle-x"></i> Cancelados
+        </button>
     </div>
 
     <div class="content">
@@ -282,10 +315,12 @@ main { padding-top: 64px; min-height: 100vh; }
         <?php if (empty($pedidos)): ?>
 
         <div class="empty-state">
-            <div class="es-icon">🛵</div>
+            <div class="es-icon"><i data-lucide="bike"></i></div>
             <h3>Sin pedidos aún</h3>
             <p>No has realizado ningún pedido de delivery todavía.</p>
-            <a href="platos_usuario.php" class="btn-ir-carta">🍽 Ir a la carta</a>
+            <a href="platos_usuario.php" class="btn-ir-carta">
+                <i data-lucide="utensils"></i> Ir a la carta
+            </a>
         </div>
 
         <?php else: ?>
@@ -294,19 +329,19 @@ main { padding-top: 64px; min-height: 100vh; }
 
             <?php foreach ($pedidos as $i => $p):
                 $iconoMetodo = match($p['metodo_pago']) {
-                    'EFECTIVO' => '💵',
-                    'YAPE'     => '📱',
-                    'PLIN'     => '💸',
-                    'TARJETA'  => '💳',
-                    default    => '💰'
+                    'EFECTIVO' => 'banknote',
+                    'YAPE'     => 'smartphone',
+                    'PLIN'     => 'zap',
+                    'TARJETA'  => 'credit-card',
+                    default    => 'wallet'
                 };
                 $iconoEstado = match($p['estado']) {
-                    'PENDIENTE'  => '🟡',
-                    'PREPARANDO' => '🔵',
-                    'EN_CAMINO'  => '🟢',
-                    'ENTREGADO'  => '✅',
-                    'CANCELADO'  => '🔴',
-                    default      => '⚪'
+                    'PENDIENTE'  => 'clock',
+                    'PREPARANDO' => 'chef-hat',
+                    'EN_CAMINO'  => 'bike',
+                    'ENTREGADO'  => 'circle-check',
+                    'CANCELADO'  => 'circle-x',
+                    default      => 'circle'
                 };
             ?>
 
@@ -326,7 +361,8 @@ main { padding-top: 64px; min-height: 100vh; }
                         </div>
                     </div>
                     <span class="pc-badge badge-<?= $p['estado'] ?>">
-                        <?= $iconoEstado ?> <?= str_replace('_', ' ', $p['estado']) ?>
+                        <i data-lucide="<?= $iconoEstado ?>"></i>
+                        <?= str_replace('_', ' ', $p['estado']) ?>
                     </span>
                 </div>
 
@@ -334,19 +370,19 @@ main { padding-top: 64px; min-height: 100vh; }
                 <div class="pc-body">
 
                     <div class="pc-row">
-                        <span class="pc-icon">👤</span>
+                        <span class="pc-icon"><i data-lucide="user"></i></span>
                         <span><?= htmlspecialchars($p['nombre_cliente']) ?>
                             · <strong><?= htmlspecialchars($p['telefono']) ?></strong>
                         </span>
                     </div>
 
                     <div class="pc-row">
-                        <span class="pc-icon">📍</span>
+                        <span class="pc-icon"><i data-lucide="map-pin"></i></span>
                         <span><?= htmlspecialchars($p['direccion']) ?></span>
                     </div>
 
                     <div class="pc-row">
-                        <span class="pc-icon">🍽</span>
+                        <span class="pc-icon"><i data-lucide="utensils"></i></span>
                         <span class="detalle-text">
                             <?= htmlspecialchars($p['detalle_resumen'] ?? '—') ?>
                         </span>
@@ -360,7 +396,8 @@ main { padding-top: 64px; min-height: 100vh; }
                         <small>S/</small> <?= number_format($p['total'], 2) ?>
                     </div>
                     <span class="pc-metodo">
-                        <?= $iconoMetodo ?> <?= $p['metodo_pago'] ?>
+                        <i data-lucide="<?= $iconoMetodo ?>"></i>
+                        <?= $p['metodo_pago'] ?>
                     </span>
                 </div>
 
@@ -369,7 +406,7 @@ main { padding-top: 64px; min-height: 100vh; }
             <?php endforeach; ?>
 
             <div class="empty-filtro" id="emptyFiltro">
-                <p>🔍 No hay pedidos en esta categoría</p>
+                <p><i data-lucide="search-x"></i> No hay pedidos en esta categoría</p>
             </div>
 
         </div>
@@ -398,6 +435,8 @@ function filtrar(estado, btn) {
     document.getElementById('emptyFiltro').style.display =
         visibles === 0 ? 'block' : 'none';
 }
+
+lucide.createIcons();
 </script>
 
 </body>

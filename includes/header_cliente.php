@@ -120,7 +120,6 @@ $config = $conexion->query("SELECT nombre FROM config LIMIT 1")->fetch();
 <nav class="navbar-custom" id="mainNavbar">
 
     <div class="titulo-navbar">
-        <div class="nav-icon">🍽</div>
         <span class="nav-text">
             <?php
                 $nombre = $config['nombre'] ?? 'Restaurante';
@@ -132,12 +131,6 @@ $config = $conexion->query("SELECT nombre FROM config LIMIT 1")->fetch();
             ?>
         </span>
     </div>
-
-    <div class="nav-status">
-        <span class="nav-status-dot"></span>
-        Abierto
-    </div>
-
 </nav>
 
 <script>

@@ -48,8 +48,8 @@ body::before{
     content:"";
     position:fixed;
     inset:0;
-    background:url('../assets/img/fnd2.jpg') no-repeat center center;
-    background-size:cover;
+background: url('../assets/img/fnd.jpg') no-repeat center center fixed;
+background-size: cover;
     z-index:-2;
 }
 

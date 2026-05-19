@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $precio = (float)$_POST['precio'];
         $imagen = subirImagen('imagen'); // null si no se cambió
 
-        if ($imagen) {
+        if ($imagen) {  
             /* Borrar imagen anterior */
             $stmt = $conexion->prepare("SELECT imagen FROM platos WHERE id = ?");
             $stmt->execute([$id]);

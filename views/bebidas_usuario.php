@@ -31,9 +31,6 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* ══════════════════════════════════════
-           VARIABLES — Paleta La Delicia
-        ══════════════════════════════════════ */
         :root {
             --cream:     #F5EFE0;
             --warm:      #EDE0C4;
@@ -205,7 +202,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             transform: translateY(-6px);
             box-shadow: 0 14px 40px var(--shadow-lg);
         }
-        #cartFloatingBtn {
+#cartFloatingBtn {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -218,11 +215,15 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
     font-size: 24px;
     cursor: pointer;
     box-shadow: 0 8px 25px rgba(0,0,0,.25);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 2000;
     transition: transform .2s, box-shadow .2s;
+}
+
+#cartFloatingBtn.visible {
+    display: flex;
 }
 
 #cartFloatingBtn:hover {
@@ -280,33 +281,40 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             padding: 1.1rem 1.2rem;
             flex: 1; display: flex; flex-direction: column;
         }
-        .card-id {
-            font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
-            color: #a08060; margin-bottom: .3rem;
-        }
         .card-name {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.25rem; font-weight: 600; color: var(--brown);
             line-height: 1.2;
         }
-        .card-date {
-            font-size: .75rem; color: #a08060; margin-top: .3rem;
-        }
-
         /* Footer de la card */
         .card-footer {
             display: flex; align-items: center; justify-content: space-between;
+            gap: .8rem;
+            flex-wrap: wrap;
             margin-top: auto; padding-top: 1rem;
             border-top: 1px solid var(--warm);
         }
+        .cart-icon{
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
         .card-price {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.5rem; font-weight: 600; color: var(--gold);
+            flex-shrink: 0;
         }
         .card-price small { font-size: .85rem; font-weight: 400; color: var(--brown-md); }
 
         /* Controles cantidad + añadir */
-        .card-controls { display: flex; align-items: center; gap: .5rem; }
+        .card-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .5rem;
+            flex: 1 1 150px;
+            min-width: 0;
+        }
         .qty-btn {
             width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--warm);
             background: transparent; color: var(--brown-md);
@@ -321,6 +329,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         }
         .btn-add-cart {
             display: flex; align-items: center; gap: .4rem;
+            justify-content: center;
             background: var(--brown); color: #fff;
             border: none; border-radius: 8px;
             padding: .5rem .9rem; cursor: pointer;
@@ -328,6 +337,8 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             font-size: .78rem; font-weight: 500;
             transition: background .2s, transform .2s;
             white-space: nowrap;
+            min-width: 92px;
+            flex-shrink: 0;
         }
         .btn-add-cart svg { width: 14px; height: 14px; flex-shrink: 0; }
         .btn-add-cart:hover { background: var(--gold); transform: translateY(-1px); }
@@ -410,7 +421,10 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         .ci-name {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1rem; font-weight: 600; color: var(--brown);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            line-height: 1.25;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
         .ci-unit { font-size: .75rem; color: #a08060; }
         .ci-controls { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
@@ -494,27 +508,13 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
 <?php include '../includes/header_cliente.php'; ?>
 <?php include '../includes/sidebar_cliente.php'; ?>
 
-<!-- TOP BAR -->
-<header class="top-bar">
-    <a href="inicio.php" class="top-logo">La <span>Delicia</span></a>
-
-    <!-- Icono Carrito -->
-    <button class="cart-trigger" id="cartTrigger" onclick="cartOpen()" title="Ver carrito">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
-        <span class="cart-badge" id="cartBadge">0</span>
-    </button>
-</header>
-
 <main>
 
     <!-- HERO -->
     <div class="page-hero">
         <div class="page-hero-content">
             <h1>Nuestras <em>Bebidas</em></h1>
-            <p>Hola <?= $nombre_usuario ?> 👋 — elige tus bebidas favoritas y agrégalas a tu pedido</p>
+            <p>Hola <?= $nombre_usuario ?>, elige tus bebidas favoritas y agrégalas a tu pedido</p>
         </div>
     </div>
 
@@ -548,7 +548,6 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
                 $badge = $badges[$i % count($badges)];
                 $nombreSafe = htmlspecialchars($bebida['nombre']);
                 $precio     = number_format((float)$bebida['precio'], 2);
-                $fecha      = $bebida['fecha'] ? date('d/m/Y', strtotime($bebida['fecha'])) : '—';
             ?>
             <div class="bebida-card"
                  data-id="<?= $bebida['id'] ?>"
@@ -557,9 +556,9 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
 
 <div class="card-img">
     <?php
-        $imgSrc = (!empty($bebida['imagen']))
-            ? '../uploads/bebidas/' . htmlspecialchars($bebida['imagen'])
-            : '../assets/img/default.jpg';
+$imgSrc = (!empty($bebida['imagen']))
+    ? '../uploads/bebidas/' . htmlspecialchars($bebida['imagen'])
+    : '../assets/img/default.jpg';
     ?>
     <img src="<?= $imgSrc ?>"
          alt="<?= $nombreSafe ?>"
@@ -572,10 +571,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
 </div>
 
                 <div class="card-body">
-                    <div class="card-id"># <?= $bebida['id'] ?></div>
                     <div class="card-name"><?= $nombreSafe ?></div>
-                    <div class="card-date">📅 <?= $fecha ?></div>
-
                     <div class="card-footer">
                         <div class="card-price">
                             <small>S/</small> <?= $precio ?>
@@ -597,7 +593,7 @@ $imgCart = (!empty($bebida['imagen']))
     ? '../uploads/bebidas/' . htmlspecialchars($bebida['imagen'])
     : '../assets/img/default.jpg';
 ?>
-onclick="addToCart(<?= $bebida['id'] ?>, '<?= addslashes($nombreSafe) ?>', <?= $bebida['precio'] ?>, '<?= $emoji ?>','<?= $imgCart ?>')"
+onclick="addToCart(<?= $bebida['id'] ?>, '<?= addslashes($nombreSafe) ?>', <?= $bebida['precio'] ?>, '<?= $emoji ?>','<?= $imgCart ?>', 'bebida')"
                                 title="Agregar al carrito">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -668,7 +664,26 @@ onclick="addToCart(<?= $bebida['id'] ?>, '<?= addslashes($nombreSafe) ?>', <?= $
 /* ══════════════════════════════════════
    ESTADO DEL CARRITO
 ══════════════════════════════════════ */
-var cart = {}; // { id: { id, nombre, precio, emoji, qty } }
+var CART_STORAGE_KEY = 'laDeliciaCart';
+var cart = loadCart(); // { key: { key, id, tipo, nombre, precio, emoji, imgSrc, qty } }
+
+function loadCart() {
+    try {
+        return JSON.parse(localStorage.getItem(CART_STORAGE_KEY)) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveCart() {
+    if (Object.keys(cart).length === 0) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        sessionStorage.removeItem('cartData');
+        return;
+    }
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    sessionStorage.setItem('cartData', JSON.stringify(cart));
+}
 
 /* ── Abrir / cerrar carrito ── */
 function cartOpen() {
@@ -693,14 +708,17 @@ function changeQty(id, delta) {
 }
 
 /* ── Añadir al carrito ── */
-function addToCart(id, nombre, precio, emoji, imgSrc) {
+function addToCart(id, nombre, precio, emoji, imgSrc, tipo) {
     var qty = parseInt(document.getElementById('qty-' + id).textContent);
+    var key = (tipo || 'bebida') + '-' + id;
 
-    if (cart[id]) {
-        cart[id].qty += qty;
+    if (cart[key]) {
+        cart[key].qty += qty;
     } else {
-        cart[id] = { 
+        cart[key] = {
+            key: key,
             id: id, 
+            tipo: tipo || 'bebida',
             nombre: nombre, 
             precio: parseFloat(precio), 
             emoji: emoji, 
@@ -709,22 +727,25 @@ function addToCart(id, nombre, precio, emoji, imgSrc) {
         };
     }
 
+    saveCart();
     renderCart();
     showToast('✓ ' + nombre + ' × ' + qty + ' añadido');
 }       
 /* ── Cambiar cantidad en carrito ── */
-function cartChangeQty(id, delta) {
-    if (!cart[id]) return;
-    cart[id].qty += delta;
-    if (cart[id].qty <= 0) {
-        delete cart[id];
+function cartChangeQty(key, delta) {
+    if (!cart[key]) return;
+    cart[key].qty += delta;
+    if (cart[key].qty <= 0) {
+        delete cart[key];
     }
+    saveCart();
     renderCart();
 }
 
 /* ── Vaciar carrito ── */
 function clearCart() {
     cart = {};
+    saveCart();
     renderCart();
     showToast('Carrito vaciado');
 }
@@ -742,10 +763,20 @@ function renderCart() {
         totalPrice += cart[id].qty * cart[id].precio;
     });
     // Badge
-    var badge = document.getElementById('cartBadge');
+var badge = document.getElementById('cartBadge');
+if (badge) {
     badge.textContent = totalQty;
     if (totalQty > 0) badge.classList.add('visible');
     else              badge.classList.remove('visible');
+}
+
+    var floatingBtn = document.getElementById('cartFloatingBtn');
+    var floatingBadge = document.getElementById('cartFloatingBadge');
+    if (floatingBtn && floatingBadge) {
+        floatingBadge.textContent = totalQty;
+        floatingBadge.style.display = totalQty > 0 ? 'inline-block' : 'none';
+        floatingBtn.classList.toggle('visible', totalQty > 0);
+    }
 
     // Header count
     document.getElementById('cartHeaderCount').textContent = totalQty + ' ítem' + (totalQty !== 1 ? 's' : '');
@@ -795,21 +826,26 @@ div.innerHTML =
                 '<div class="ci-unit">S/ ' + item.precio.toFixed(2) + ' c/u</div>' +
             '</div>' +
             '<div class="ci-controls">' +
-                '<button class="ci-qty-btn remove" onclick="cartChangeQty(' + id + ', -1)" title="Quitar uno">−</button>' +
+                '<button type="button" class="ci-qty-btn remove" data-key="' + id + '" data-delta="-1" title="Quitar uno">−</button>' +
                 '<span class="ci-qty">' + item.qty + '</span>' +
-                '<button class="ci-qty-btn" onclick="cartChangeQty(' + id + ', 1)" title="Agregar uno">+</button>' +
+                '<button type="button" class="ci-qty-btn" data-key="' + id + '" data-delta="1" title="Agregar uno">+</button>' +
             '</div>' +
             '<div class="ci-subtotal">S/ ' + (item.qty * item.precio).toFixed(2) + '</div>';
         container.appendChild(div);
     });
 }
 
+document.getElementById('cartItems').addEventListener('click', function(e) {
+    var btn = e.target.closest('.ci-qty-btn');
+    if (!btn) return;
+    cartChangeQty(btn.dataset.key, parseInt(btn.dataset.delta, 10));
+});
+
 /* ── Ir a confirmar pedido ── */
 function irAPedido() {
     var ids = Object.keys(cart);
     if (ids.length === 0) { showToast('Tu carrito está vacío'); return; }
-    // Guardar en sessionStorage y redirigir
-    sessionStorage.setItem('cartData', JSON.stringify(cart));
+    saveCart();
     window.location.href = 'pedidos_web.php';
 }
 
@@ -847,8 +883,9 @@ function filterBebidas() {
 renderCart();
 </script>
 <button id="cartFloatingBtn" onclick="cartOpen()">
-    🛒
+    <img src="../assets/img/carrito.png" alt="Carrito" class="cart-icon">
     <span id="cartFloatingBadge">0</span>
-</button>   
+</button> 
+<script>renderCart();</script>
 </body>
 </html>

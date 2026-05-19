@@ -3,76 +3,125 @@ require "../config/conexion.php";
 $config = $conexion->query("SELECT nombre FROM config LIMIT 1")->fetch();
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 
-/* NAVBAR */
-.navbar-custom{
-    background:#000;
-    box-shadow:0px 2px 10px rgba(0,0,0,0.4);
-    min-height:75px;
+/* ── HEADER ── */
+.navbar-custom {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 500;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
 
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    /* Glassmorphism oscuro */
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, .055);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, .28);
 
-    padding:10px 20px;
-    position: relative; /* 👈 importante */
+    /* Transición de ocultar/mostrar */
+    transform: translateY(0);
+    transition: transform .35s cubic-bezier(.4, 0, .2, 1),
+                opacity    .35s ease,
+                box-shadow .25s ease;
+    will-change: transform;
 }
 
-/* TITULO CENTRADO REAL */
-.titulo-navbar{
-    position: absolute; /* 👈 clave */
-    left: 50%;
+/* Estado oculto (añadido por JS al hacer scroll) */
+.navbar-custom.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Línea verde sutil en el borde inferior al hacer hover */
+.navbar-custom::after {
+    content: "";
+    position: absolute;
+    bottom: 0; left: 50%;
     transform: translateX(-50%);
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #6ee7b7, transparent);
+    border-radius: 999px;
+    transition: width .4s ease;
+}
+.navbar-custom:hover::after { width: 60%; }
 
-    font-family:'Poppins', sans-serif;
-    font-size:32px;
-    font-weight:800;
-    letter-spacing:1px;
-    color:#fff;
-    text-shadow:0 3px 8px rgba(255,255,255,0.15);
-    text-align:center;
+/* ── TÍTULO ── */
+.titulo-navbar {
+    font-family: 'Sora', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: #f1f5f9;
+    text-align: center;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
 }
 
-/* TABLET */
-@media (max-width:991px){
-    .titulo-navbar{
-        font-size:24px;
-    }
+@keyframes headerPulse {
+    0%, 100% { opacity: 1;  box-shadow: 0 0 8px  rgba(110,231,183,.6); }
+    50%       { opacity: .6; box-shadow: 0 0 16px rgba(110,231,183,.9); }
 }
 
-/* CELULAR */
-@media (max-width:576px){
-    .titulo-navbar{
-        font-size:20px;
-        line-height:1.3;
-    }
+/* Empujar contenido para que no quede debajo del header */
+body { padding-top: 64px; }
 
-    .navbar-custom{
-        padding:12px;
-        min-height:auto;
-    }
+/* ── RESPONSIVE ── */
+@media (max-width: 991px) {
+    .titulo-navbar { font-size: 16px; }
+}
+
+@media (max-width: 576px) {
+    .navbar-custom { height: 56px; padding: 0 14px; }
+    .titulo-navbar { font-size: 15px; }
+    body { padding-top: 56px; }
 }
 
 </style>
-</head>
 
-<body>
-
-<nav class="navbar-custom">
-
-    <div class="titulo-navbar">
-        <?= $config['nombre'] ?>
-    </div>
-
+<nav class="navbar-custom" id="mainHeader">
+    <span class="titulo-navbar">
+        <?= htmlspecialchars($config['nombre'] ?? 'Panel') ?>
+    </span>
 </nav>
 
-</body>
-</html>
+<script>
+(function () {
+    var header     = document.getElementById("mainHeader");
+    var lastScroll = 0;
+    var threshold  = 60;   /* px mínimos antes de ocultar */
+    var ticking    = false;
+
+    function onScroll() {
+        if (!ticking) {
+            requestAnimationFrame(function () {
+                var current = window.scrollY || window.pageYOffset;
+
+                if (current > threshold && current > lastScroll) {
+                    /* Scrolleando hacia abajo → ocultar */
+                    header.classList.add("hidden");
+                } else {
+                    /* Scrolleando hacia arriba o en el top → mostrar */
+                    header.classList.remove("hidden");
+                }
+
+                lastScroll = current <= 0 ? 0 : current;
+                ticking    = false;
+            });
+            ticking = true;
+        }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+})();
+</script>
