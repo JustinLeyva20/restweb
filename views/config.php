@@ -15,6 +15,8 @@ $nombre    = $config['nombre'] ?? '';
 $telefono  = $config['telefono'] ?? '';
 $direccion = $config['direccion'] ?? '';
 $mensaje   = $config['mensaje'] ?? '';
+$horario_apertura = $config['horario_apertura'] ?? '08:00';
+$horario_cierre  = $config['horario_cierre'] ?? '20:00';
 $id        = $config['id'] ?? '';
 ?>
 
@@ -313,6 +315,16 @@ textarea.form-control{
 <div class="info-value"><?= $direccion ?: 'No registrado' ?></div>
 </div>
 
+<div class="info-item">
+<div class="info-label">Horario apertura</div>
+<div class="info-value"><?= $horario_apertura ?> am</div>
+</div>
+
+<div class="info-item">
+<div class="info-label">Horario cierre</div>
+<div class="info-value"><?= $horario_cierre ?> pm</div>
+</div>
+
 <div class="info-item" style="grid-column:1/-1;">
 <div class="info-label">Mensaje</div>
 <div class="info-value"><?= $mensaje ?: 'No registrado' ?></div>
@@ -354,6 +366,24 @@ method="POST">
 <div class="mb-3">
 <label class="form-label">Dirección</label>
 <textarea name="direccion" class="form-control"><?= $direccion ?></textarea>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Horario apertura (am)</label>
+<select name="horario_apertura" class="form-control" style="appearance:auto;">
+    <?php for ($h = 7; $h <= 11; $h++): $val = sprintf('%02d:00', $h); ?>
+    <option value="<?= $val ?>" <?= $horario_apertura === $val ? 'selected' : '' ?>><?= $val ?> am</option>
+    <?php endfor; ?>
+</select>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Horario cierre (pm)</label>
+<select name="horario_cierre" class="form-control" style="appearance:auto;">
+    <?php for ($h = 1; $h <= 11; $h++): $val = sprintf('%02d:00', $h); ?>
+    <option value="<?= $val ?>" <?= $horario_cierre === $val ? 'selected' : '' ?>><?= $val ?> pm</option>
+    <?php endfor; ?>
+</select>
 </div>
 
 <div class="mb-3">

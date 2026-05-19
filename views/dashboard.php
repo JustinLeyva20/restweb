@@ -4,6 +4,24 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
     exit;
 }
+
+require "../config/conexion.php";
+
+$total_reservas   = $conexion->query("SELECT COUNT(*) FROM reservas WHERE estado='CONFIRMADA'")->fetchColumn();
+$total_salas      = $conexion->query("SELECT COUNT(*) FROM salas")->fetchColumn();
+$total_platos     = $conexion->query("SELECT COUNT(*) FROM platos")->fetchColumn();
+$total_bebidas    = $conexion->query("SELECT COUNT(*) FROM bebidas")->fetchColumn();
+$total_postres    = $conexion->query("SELECT COUNT(*) FROM postres")->fetchColumn();
+$total_usuarios   = $conexion->query("SELECT COUNT(*) FROM usuarios")->fetchColumn();
+$total_pedidos_web = $conexion->query("SELECT COUNT(*) FROM pedidos_web WHERE estado NOT IN ('ENTREGADO','CANCELADO')")->fetchColumn();
+$total_reportes   = $conexion->query("SELECT COUNT(*) FROM reportes WHERE estado!='RESUELTO'")->fetchColumn();
+
+$stmt = $conexion->query("SELECT horario_apertura, horario_cierre FROM config LIMIT 1");
+$hconf = $stmt->fetch(PDO::FETCH_ASSOC);
+$h_aper = (int)explode(':', $hconf['horario_apertura'] ?? '08:00')[0];
+$h_cier = (int)explode(':', $hconf['horario_cierre'] ?? '20:00')[0];
+$hora_peru = (int)date('G', time() - 5 * 3600);
+$en_horario = $hora_peru >= $h_aper && $hora_peru < $h_cier;
 ?>
 
 <!DOCTYPE html>
@@ -23,8 +41,8 @@ if (!isset($_SESSION['usuario'])) {
     --green:   #6ee7b7;
     --green-d: #064e3b;
     --bg:      #0d0f18;
-    --panel:   #171922;
-    --border:  rgba(255,255,255,.06);
+    --panel:   rgba(13,15,24,.65);
+    --border:  rgba(255,255,255,.08);
     --muted:   #64748b;
     --text:    #e2e8f0;
 }
@@ -71,7 +89,9 @@ background-size: cover;
     position: relative;
     border-radius: 24px;
     overflow: hidden;
-    background: #0f1117;
+    background: rgba(13, 15, 24, 0);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid var(--border);
     padding: 52px 48px 48px;
     margin-bottom: 20px;
@@ -86,18 +106,6 @@ background-size: cover;
     inset: 0;
     width: 100%;
     height: 100%;
-}
-
-/* Gradient overlay sobre el canvas */
-.hero-gradient {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        120deg,
-        rgba(13,15,24,.92) 0%,
-        rgba(13,15,24,.72) 55%,
-        rgba(13,15,24,.30) 100%
-    );
 }
 
 .hero-content {
@@ -127,6 +135,7 @@ background-size: cover;
     background: var(--green);
     animation: pulse 2s infinite;
 }
+
 
 .hero-title {
     font-size: 38px;
@@ -203,6 +212,8 @@ background-size: cover;
 
 .stat-card {
     background: var(--panel);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 20px 22px;
@@ -273,6 +284,8 @@ background-size: cover;
 
 .info-card {
     background: var(--panel);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 22px 24px;
@@ -313,15 +326,17 @@ background-size: cover;
     display: flex; align-items: center; gap: 10px;
     padding: 12px 14px;
     border-radius: 12px;
-    background: #1e2130;
+    background: rgba(13,15,24,.4);
     border: 1px solid rgba(255,255,255,.04);
     text-decoration: none;
     transition: border-color .2s, background .2s;
     color: var(--text);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 .quick-link:hover {
     border-color: rgba(110,231,183,.2);
-    background: #1a2030;
+    background: rgba(13,15,24,.6);
     color: var(--text);
 }
 .quick-link-icon {
@@ -374,7 +389,7 @@ background-size: cover;
 
 /* ── Responsive ── */
 @media (max-width: 1200px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 992px) {
     .hero-deco { display: none; }
@@ -384,11 +399,15 @@ background-size: cover;
     .content-area { margin-left: 0; padding: 14px; }
     .hero-section { padding: 32px 24px 28px; }
     .hero-title { font-size: 26px; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
     .bottom-grid { grid-template-columns: 1fr; }
     .quick-links { grid-template-columns: 1fr; }
 }
-@media (max-width: 480px) {
+@media (max-width: 576px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero-title { font-size: 24px; }
+}
+@media (max-width: 400px) {
     .stats-grid { grid-template-columns: 1fr; }
     .hero-title { font-size: 22px; }
 }
@@ -408,10 +427,6 @@ background-size: cover;
         <div class="hero-gradient"></div>
 
         <div class="hero-content">
-            <div class="hero-badge">
-                <span class="hero-badge-dot"></span>
-                Panel Administrativo
-            </div>
             <h1 class="hero-title">
                 Bienvenido al<br><span>Sistema</span>
             </h1>
@@ -422,12 +437,6 @@ background-size: cover;
 
         <!-- Decoración anillos derecha -->
         <div class="hero-deco">
-            <div class="deco-ring">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-            </div>
         </div>
     </div>
 
@@ -443,8 +452,8 @@ background-size: cover;
                     <line x1="3"  y1="10" x2="21" y2="10"/>
                 </svg>
             </div>
-            <div class="stat-value" id="stat-reservas">—</div>
-            <div class="stat-label">Reservas totales</div>
+            <div class="stat-value"><?= $total_reservas ?></div>
+            <div class="stat-label">Reservas</div>
         </div>
 
         <div class="stat-card" data-color="blue">
@@ -454,8 +463,8 @@ background-size: cover;
                     <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
             </div>
-            <div class="stat-value" id="stat-salas">—</div>
-            <div class="stat-label">Salas activas</div>
+            <div class="stat-value"><?= $total_salas ?></div>
+            <div class="stat-label">Salas</div>
         </div>
 
         <div class="stat-card" data-color="amber">
@@ -468,8 +477,8 @@ background-size: cover;
                     <line x1="14" y1="1" x2="14" y2="4"/>
                 </svg>
             </div>
-            <div class="stat-value" id="stat-platos">—</div>
-            <div class="stat-label">Platos en carta</div>
+            <div class="stat-value"><?= $total_platos ?></div>
+            <div class="stat-label">Platos</div>
         </div>
 
         <div class="stat-card" data-color="rose">
@@ -482,8 +491,58 @@ background-size: cover;
                     <line x1="14" y1="1" x2="14" y2="4"/>
                 </svg>
             </div>
-            <div class="stat-value" id="stat-bebidas">—</div>
-            <div class="stat-label">Bebidas disponibles</div>
+            <div class="stat-value"><?= $total_bebidas ?></div>
+            <div class="stat-label">Bebidas</div>
+        </div>
+
+        <div class="stat-card" data-color="green">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                    <line x1="6" y1="1" x2="6" y2="4"/>
+                    <line x1="10" y1="1" x2="10" y2="4"/>
+                    <line x1="14" y1="1" x2="14" y2="4"/>
+                </svg>
+            </div>
+            <div class="stat-value"><?= $total_postres ?></div>
+            <div class="stat-label">Postres</div>
+        </div>
+
+        <div class="stat-card" data-color="blue">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="17" cy="15" r="1"/><circle cx="7" cy="15" r="1"/>
+                    <path d="M8 9h8"/><path d="M7 5c-2 0-4 2-4 4v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9c0-2-2-4-4-4"/>
+                </svg>
+            </div>
+            <div class="stat-value"><?= $total_pedidos_web ?></div>
+            <div class="stat-label">Pedidos Web</div>
+        </div>
+
+        <div class="stat-card" data-color="amber">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-value"><?= $total_usuarios ?></div>
+            <div class="stat-label">Usuarios</div>
+        </div>
+
+        <div class="stat-card" data-color="rose">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                    <path d="M12 8v4"/>
+                    <path d="M12 16h.01"/>
+                </svg>
+            </div>
+            <div class="stat-value"><?= $total_reportes ?></div>
+            <div class="stat-label">Reportes</div>
         </div>
 
     </div>
@@ -567,7 +626,7 @@ background-size: cover;
             </div>
         </div>
 
-        <!-- Actividad reciente -->
+        <!-- Estado del sistema -->
         <div class="info-card">
             <div class="card-header-row">
                 <span class="card-title">
@@ -576,28 +635,30 @@ background-size: cover;
                     </svg>
                     Estado del sistema
                 </span>
-                <span class="card-badge">En línea</span>
+                <span class="card-badge" style="<?= $en_horario ? '' : 'background:rgba(248,113,113,.08);color:#f87171;border-color:rgba(248,113,113,.15)' ?>">
+                    <?= $en_horario ? 'En horario' : 'Fuera de horario' ?>
+                </span>
             </div>
             <div class="activity-list">
                 <div class="activity-item">
-                    <span class="activity-dot green"></span>
-                    <span class="activity-text">Módulo de reservas activo</span>
-                    <span class="activity-time">Ahora</span>
+                    <span class="activity-dot <?= $total_reservas > 0 ? 'green' : 'rose' ?>"></span>
+                    <span class="activity-text"><?= $total_reservas ?> reservas confirmadas</span>
+                    <span class="activity-time">Activas</span>
                 </div>
                 <div class="activity-item">
-                    <span class="activity-dot indigo"></span>
-                    <span class="activity-text">Módulo de salas activo</span>
-                    <span class="activity-time">Ahora</span>
+                    <span class="activity-dot <?= $total_salas > 0 ? 'indigo' : 'rose' ?>"></span>
+                    <span class="activity-text"><?= $total_salas ?> salas disponibles</span>
+                    <span class="activity-time">—</span>
                 </div>
                 <div class="activity-item">
-                    <span class="activity-dot amber"></span>
-                    <span class="activity-text">Módulo de platos activo</span>
-                    <span class="activity-time">Ahora</span>
+                    <span class="activity-dot <?= $total_platos > 0 ? 'amber' : 'rose' ?>"></span>
+                    <span class="activity-text"><?= $total_platos ?> platos en carta</span>
+                    <span class="activity-time">—</span>
                 </div>
                 <div class="activity-item">
-                    <span class="activity-dot rose"></span>
-                    <span class="activity-text">Módulo de bebidas activo</span>
-                    <span class="activity-time">Ahora</span>
+                    <span class="activity-dot <?= $total_bebidas > 0 ? 'rose' : 'rose' ?>"></span>
+                    <span class="activity-text"><?= $total_bebidas ?> bebidas disponibles</span>
+                    <span class="activity-time">—</span>
                 </div>
                 <div class="activity-item">
                     <span class="activity-dot green"></span>
@@ -701,47 +762,6 @@ background-size: cover;
     });
 })();
 
-/* ══════════════════════════════
-   CONTADORES — fetch a PHP endpoints
-   (Si no existen, muestra 0)
-══════════════════════════════ */
-function countUp(el, target, duration) {
-    var start  = 0;
-    var step   = target / (duration / 16);
-    var timer  = setInterval(function() {
-        start += step;
-        if (start >= target) { start = target; clearInterval(timer); }
-        el.textContent = Math.floor(start);
-    }, 16);
-}
-
-function loadStats() {
-    var endpoints = [
-        { id: "stat-reservas", url: "../controllers/statsController.php?tabla=reservas" },
-        { id: "stat-salas",    url: "../controllers/statsController.php?tabla=salas"    },
-        { id: "stat-platos",   url: "../controllers/statsController.php?tabla=platos"   },
-        { id: "stat-bebidas",  url: "../controllers/statsController.php?tabla=bebidas"  }
-    ];
-
-    endpoints.forEach(function(ep) {
-        fetch(ep.url)
-        .then(function(r) { return r.text(); })
-        .then(function(text) {
-            var n   = parseInt(text.trim(), 10);
-            var el  = document.getElementById(ep.id);
-            if (!isNaN(n)) {
-                countUp(el, n, 900);
-            } else {
-                el.textContent = "0";
-            }
-        })
-        .catch(function() {
-            document.getElementById(ep.id).textContent = "0";
-        });
-    });
-}
-
-loadStats();
 </script>
 
 </body>

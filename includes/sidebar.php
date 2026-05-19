@@ -8,6 +8,39 @@ $iniciales = strtoupper(
     (isset($partes[0]) ? mb_substr($partes[0], 0, 1) : '') .
     (isset($partes[1]) ? mb_substr($partes[1], 0, 1) : '')
 );
+
+// ── Estado de la tienda (solo admin) ──
+$tienda_abierta = true;
+$tienda_forzado = false;
+if ($rol === 'Administrador') {
+    $cfg_path = __DIR__ . '/../config/tienda.json';
+    $manual = null;
+    if (file_exists($cfg_path)) {
+        $cfg = json_decode(file_get_contents($cfg_path), true);
+        $manual = $cfg['manual_override'] ?? null;
+    }
+    // Leer horario desde la BD
+    try {
+        $stmt = $conexion->query("SELECT horario_apertura, horario_cierre FROM config LIMIT 1");
+        $hconf = $stmt->fetch(PDO::FETCH_ASSOC);
+        $h_aper = (int)explode(':', $hconf['horario_apertura'] ?? '08:00')[0];
+        $h_cier = (int)explode(':', $hconf['horario_cierre'] ?? '20:00')[0];
+    } catch (Exception $e) {
+        $h_aper = 8; $h_cier = 20;
+    }
+    $hora_peru = (int)date('G', time() - 5 * 3600);
+    $auto = $hora_peru >= $h_aper && $hora_peru < $h_cier;
+    if ($manual === true) {
+        $tienda_abierta = true;
+        $tienda_forzado = 'abierta';
+    } elseif ($manual === false) {
+        $tienda_abierta = false;
+        $tienda_forzado = 'cerrada';
+    } else {
+        $tienda_abierta = $auto;
+        $tienda_forzado = false;
+    }
+}
 ?>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,7 +136,7 @@ $iniciales = strtoupper(
 
 /* ── HEADER ── */
 .sb-header {
-    padding: 24px 18px 18px;
+    padding: 14px 38px 18px;
     flex-shrink: 0;
     position: relative;
 }
@@ -112,8 +145,7 @@ $iniciales = strtoupper(
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 20px;
-    padding-left: 48px; /* espacio para el toggle btn */
+    margin-bottom: 16px;
 }
 
 .sb-logo-icon {
@@ -143,6 +175,7 @@ $iniciales = strtoupper(
 
 /* ── TARJETA USUARIO ── */
 .sb-user-card {
+    margin: 0 -15px 0 38px;
     background: rgba(255,255,255,.05);
     border: 1px solid rgba(255,255,255,.09);
     border-radius: 12px;
@@ -198,7 +231,7 @@ $iniciales = strtoupper(
     letter-spacing: 1.1px;
     color: rgba(255,255,255,.28);
     text-transform: uppercase;
-    padding: 10px 10px 5px;
+    padding: 1px 10px 5px;
 }
 
 /* ── ITEMS ── */
@@ -294,6 +327,9 @@ $iniciales = strtoupper(
 .i-users   { background: rgba(167,139,250,.18);}
 .i-postres { background: rgba(236,72,153,.15); }
 .i-reportes { background: rgba(244,63,94,.15); }
+.i-pedidos-web { background: rgba(16,185,129,.15); }
+.i-reservas { background: rgba(6,182,212,.15); }
+.i-estadisticas { background: rgba(139,92,246,.15); }
 
 /* ── FOOTER / SALIR ── */
 .sb-footer {
@@ -355,12 +391,17 @@ $iniciales = strtoupper(
 @media (max-width: 768px) {
     #sidebar { width: 236px; }
     #sidebar.hidden { left: -236px; }
+    .sb-header { padding: 18px 14px 12px; }
 }
 
 @media (max-width: 480px) {
     #sidebar { width: 220px; }
     #sidebar.hidden { left: -220px; }
-    .sb-logo-row { padding-left: 44px; }
+    .sb-header { padding: 14px 10px 10px; }
+    .sb-user-card { padding: 8px 10px; gap: 8px; }
+    .sb-avatar { width: 28px; height: 28px; font-size: 10px; }
+    .sb-user-name { font-size: 11px; }
+    .sb-user-role { font-size: 10px; }
 }
 </style>
 
@@ -379,16 +420,7 @@ $iniciales = strtoupper(
 
     <!-- Header -->
     <div class="sb-header">
-        <div class="sb-logo-row">
-            <div class="sb-logo-icon">
-                <i data-lucide="utensils-crossed" style="width:18px;height:18px;stroke:#fff;stroke-width:2;"></i>
-            </div>
-            <span class="sb-logo-text">
-                <?= ($rol === 'Administrador') ? 'Administrador' : 'Panel' ?>
-            </span>
-        </div>
-
-        <div class="sb-user-card">
+                <div class="sb-user-card">
             <div class="sb-avatar"><?= htmlspecialchars($iniciales ?: '??') ?></div>
             <div>
                 <div class="sb-user-name"><?= htmlspecialchars($usuario) ?></div>
@@ -438,6 +470,12 @@ $iniciales = strtoupper(
     </div>
     <span class="sb-item-label">Reservas Web</span>
 </a>
+        <a href="estadisticas.php" class="sb-item <?= basename($_SERVER['PHP_SELF']) === 'estadisticas.php' ? 'active' : '' ?>">
+    <div class="sb-item-icon i-estadisticas">
+        <i data-lucide="bar-chart-3"></i>
+    </div>
+    <span class="sb-item-label">Estadísticas</span>
+</a>
         <div class="sb-divider"></div>
         <div class="sb-section-label">Sistema</div>
 
@@ -463,7 +501,9 @@ $iniciales = strtoupper(
 
     <!-- Footer -->
     <div class="sb-footer">
+        <?php if ($rol === 'Administrador'): ?>
         <div class="sb-divider" style="margin: 0 0 8px;"></div>
+        <?php endif; ?>
         <a href="../controllers/logout.php" class="btn-salir">
             <div class="sb-salir-icon"><i data-lucide="log-out" style="width:16px;height:16px;stroke:rgba(239,68,68,.8);stroke-width:1.75;"></i></div>
             <span class="sb-salir-label">Salir</span>

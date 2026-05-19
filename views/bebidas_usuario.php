@@ -14,6 +14,25 @@ if ($_SESSION['rol'] === 'Administrador') {
 
 $nombre_usuario = htmlspecialchars($_SESSION['usuario'] ?? 'Cliente');
 
+// ── Estado de la tienda ──
+$tienda_cfg_path = __DIR__ . '/../config/tienda.json';
+$tienda_manual = null;
+if (file_exists($tienda_cfg_path)) {
+    $tienda_cfg = json_decode(file_get_contents($tienda_cfg_path), true);
+    $tienda_manual = $tienda_cfg['manual_override'] ?? null;
+}
+try {
+    $stmt = $conexion->query("SELECT horario_apertura, horario_cierre FROM config LIMIT 1");
+    $hconf = $stmt->fetch(PDO::FETCH_ASSOC);
+    $h_aper = (int)explode(':', $hconf['horario_apertura'] ?? '08:00')[0];
+    $h_cier = (int)explode(':', $hconf['horario_cierre'] ?? '20:00')[0];
+} catch (Exception $e) { $h_aper = 8; $h_cier = 20; }
+$hora_peru = (int)date('G', time() - 5 * 3600);
+$tienda_auto = $hora_peru >= $h_aper && $hora_peru < $h_cier;
+if ($tienda_manual === true) $tienda_abierta = true;
+elseif ($tienda_manual === false) $tienda_abierta = false;
+else $tienda_abierta = $tienda_auto;
+
 // Obtener bebidas
 $sql = $conexion->prepare("SELECT * FROM bebidas ORDER BY nombre ASC");
 $sql->execute();
@@ -495,6 +514,40 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* ── TIENDA CERRADA ──────────────────── */
+        .store-closed-banner {
+            background: linear-gradient(135deg, #8B1A1A, #b91c1c);
+            color: #fff;
+            text-align: center;
+            padding: .6rem 1rem;
+            font-size: .85rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+        .store-closed-banner svg {
+            width: 16px; height: 16px;
+            vertical-align: middle; margin-right: 6px;
+        }
+        .btn-add-cart.disabled {
+            background: #a08060 !important;
+            cursor: not-allowed !important;
+            opacity: .6;
+        }
+        .btn-add-cart.disabled:hover {
+            background: #a08060 !important;
+            transform: none !important;
+        }
+        .qty-btn.disabled {
+            opacity: .4;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
+        .ci-qty-btn.disabled {
+            opacity: .4;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
+
         /* ── RESPONSIVE ──────────────────────── */
         @media (max-width: 640px) {
             .search-wrap, .bebidas-section { padding-left: 1.2rem; padding-right: 1.2rem; }
@@ -517,6 +570,16 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             <p>Hola <?= $nombre_usuario ?>, elige tus bebidas favoritas y agrégalas a tu pedido</p>
         </div>
     </div>
+
+    <?php if (!$tienda_abierta): ?>
+    <div class="store-closed-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Tienda cerrada — Horario de atención: 8:00 am a 8:00 pm
+    </div>
+    <?php endif; ?>
 
     <!-- BUSCADOR -->
     <div class="search-wrap">
@@ -665,6 +728,7 @@ onclick="addToCart(<?= $bebida['id'] ?>, '<?= addslashes($nombreSafe) ?>', <?= $
    ESTADO DEL CARRITO
 ══════════════════════════════════════ */
 var CART_STORAGE_KEY = 'laDeliciaCart';
+var TIENDA_ABIERTA = <?= $tienda_abierta ? 'true' : 'false' ?>;
 var cart = loadCart(); // { key: { key, id, tipo, nombre, precio, emoji, imgSrc, qty } }
 
 function loadCart() {
@@ -709,6 +773,10 @@ function changeQty(id, delta) {
 
 /* ── Añadir al carrito ── */
 function addToCart(id, nombre, precio, emoji, imgSrc, tipo) {
+    if (!TIENDA_ABIERTA) {
+        showToast('Tienda cerrada — Horario: 8:00 am a 8:00 pm');
+        return;
+    }
     var qty = parseInt(document.getElementById('qty-' + id).textContent);
     var key = (tipo || 'bebida') + '-' + id;
 
@@ -734,6 +802,10 @@ function addToCart(id, nombre, precio, emoji, imgSrc, tipo) {
 /* ── Cambiar cantidad en carrito ── */
 function cartChangeQty(key, delta) {
     if (!cart[key]) return;
+    if (!TIENDA_ABIERTA && delta > 0) {
+        showToast('Tienda cerrada — No puedes agregar más productos');
+        return;
+    }
     cart[key].qty += delta;
     if (cart[key].qty <= 0) {
         delete cart[key];

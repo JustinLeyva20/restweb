@@ -7,7 +7,9 @@ CREATE TABLE config (
   nombre VARCHAR(255) NOT NULL,
   telefono VARCHAR(11) NOT NULL,
   direccion TEXT NOT NULL,
-  mensaje VARCHAR(255) NOT NULL
+  mensaje VARCHAR(255) NOT NULL,
+  horario_apertura VARCHAR(10) NOT NULL DEFAULT '08:00',
+  horario_cierre VARCHAR(10) NOT NULL DEFAULT '20:00'
 );
 
 CREATE TABLE salas (

@@ -6,7 +6,7 @@ if (!isset($_SESSION['usuario'])) { header("Location: login.php"); exit; }
 if ($_SESSION['rol'] === 'Administrador') { header("Location: dashboard.php"); exit; }
 
 $nombre_usuario = htmlspecialchars($_SESSION['usuario'] ?? 'Cliente');
-$stmt = $conexion->query("SELECT ruc, nombre, telefono, direccion, mensaje FROM config LIMIT 1");
+$stmt = $conexion->query("SELECT ruc, nombre, telefono, direccion, mensaje, horario_apertura, horario_cierre FROM config LIMIT 1");
 $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
@@ -200,6 +200,7 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
     .icon-tel  { background: rgba(44,74,46,.1);    color: var(--green-lt); }
     .icon-dir  { background: rgba(99,102,241,.1);  color: #6366f1;         }
     .icon-msg  { background: rgba(236,72,153,.1);  color: #ec4899;         }
+    .icon-horario { background: rgba(14,165,233,.1);  color: #0ea5e9;      }
 
     .data-label {
         font-size: .7rem; font-weight: 700;
@@ -285,6 +286,19 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
                 </div>
 
                 <div class="data-row" style="animation-delay:.4s">
+                    <div class="data-icon icon-horario">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <div>
+                        <div class="data-label">Horario de atención</div>
+                        <div class="data-value">
+                            <?= htmlspecialchars($datos_empresa['horario_apertura']) ?> am —
+                            <?= htmlspecialchars($datos_empresa['horario_cierre']) ?> pm
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-row" style="animation-delay:.5s">
                     <div class="data-icon icon-msg">
                         <i data-lucide="message-circle"></i>
                     </div>
