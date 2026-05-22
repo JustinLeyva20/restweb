@@ -28,7 +28,7 @@ $reservas = $reservas->fetchAll(PDO::FETCH_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mis Reservas — La Delicia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Lucide Icons -->
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
@@ -68,7 +68,7 @@ body {
     border-bottom: 1px solid rgba(200,150,46,.22);
 }
 .top-logo {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.5rem; font-weight: 600;
     color: var(--brown); text-decoration: none;
 }
@@ -90,7 +90,7 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .hero-inner { position:relative; z-index:1; }
 .hero-inner h1 {
-    font-family:'Cormorant Garamond',serif;
+    font-family:'Merriweather',serif;
     font-size: clamp(2rem,4vw,3rem);
     font-weight:300; color:var(--cream);
     animation: fadeUp .6s .1s both;
@@ -151,7 +151,7 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .empty-state .es-icon svg { width: 36px; height: 36px; stroke-width: 1.5; }
 .empty-state h3 {
-    font-family:'Cormorant Garamond',serif;
+    font-family:'Merriweather',serif;
     font-size:1.6rem; color:var(--brown-md); margin-bottom:.5rem;
 }
 .empty-state p { color:#a08060; font-size:.9rem; margin-bottom:1.5rem; }
@@ -199,7 +199,7 @@ main { padding-top: 64px; min-height: 100vh; }
 .rc-sala-wrap { display: flex; align-items: center; gap: .5rem; }
 .rc-sala-wrap svg { width: 18px; height: 18px; stroke-width: 1.6; color: var(--gold); }
 .rc-sala {
-    font-family:'Cormorant Garamond',serif;
+    font-family:'Merriweather',serif;
     font-size:1.15rem; font-weight:600; color:var(--brown);
 }
 .rc-mesa { font-size:.78rem; color:var(--brown-md); margin-top:.2rem; }
@@ -272,7 +272,7 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .empty-filtro .ef-icon svg { width: 28px; height: 28px; stroke-width: 1.6; }
 .empty-filtro p {
-    font-family:'Cormorant Garamond',serif;
+    font-family:'Merriweather',serif;
     font-size:1.4rem; color:var(--brown-md);
 }
 

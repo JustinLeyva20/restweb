@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Delicia — Mi Cuenta</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
     :root {
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         border-bottom: 1px solid rgba(200,150,46,.22);
     }
     .top-logo {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
         font-size: 1.5rem; font-weight: 600; letter-spacing: .04em;
         color: var(--brown); text-decoration: none;
     }
@@ -161,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     }
     .hero-inner { position:relative; z-index:1; }
     .hero-inner h1 {
-        font-family:'Cormorant Garamond',serif;
+        font-family:'Merriweather',serif;
         font-size:clamp(2rem,4vw,3rem);
         font-weight:300; color:var(--cream); line-height:1.1;
         animation: fadeUp .6s .1s both;
@@ -214,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     }
     .card-header-icon svg { width: 22px; height: 22px; stroke-width: 1.8; }
     .card-header-title {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
         font-size: 1.2rem; font-weight: 600;
         color: var(--cream);
         position: relative; z-index:1;
@@ -233,10 +233,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         font-size: 2rem; font-weight: 700; color: #fff;
         box-shadow: 0 8px 24px rgba(200,150,46,.3);
         margin-bottom: .8rem;
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
     }
     .avatar-name {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
         font-size: 1.3rem; font-weight: 600; color: var(--brown);
     }
     .avatar-rol {

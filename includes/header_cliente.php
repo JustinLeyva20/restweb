@@ -4,7 +4,7 @@ $config = $conexion->query("SELECT nombre FROM config LIMIT 1")->fetch();
 ?>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Sora:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Sora:wght@400;600&display=swap');
 
 .navbar-custom {
     position: fixed;
@@ -79,7 +79,7 @@ $config = $conexion->query("SELECT nombre FROM config LIMIT 1")->fetch();
 }
 
 .titulo-navbar .nav-text {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 26px;
     font-weight: 600;
     color: #F5EFE0;

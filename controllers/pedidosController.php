@@ -45,6 +45,7 @@ if ($data) {
             INSERT INTO pedidos
             (id_sala,num_mesa,total,usuario,comentario,estado,fecha)
             VALUES (?,?,0,?,?,'PENDIENTE',NOW())
+            RETURNING id
         ");
         $crear->execute([
             $sala,
@@ -53,7 +54,7 @@ if ($data) {
             $comentario
         ]);
 
-        $idPedido = $conexion->lastInsertId();
+        $idPedido = $crear->fetchColumn();
 
     } else {
 

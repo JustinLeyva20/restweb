@@ -6,7 +6,7 @@
 <title>Iniciar Sesión</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
 
 <style>
 *,
@@ -112,6 +112,9 @@ body::after{
     border:1px solid rgba(200,169,110,.35);
     margin-bottom:18px;
 }
+.card-footer a:hover {
+    text-decoration: underline;
+}
 
 .logo-frame img{
     width:44px;
@@ -120,7 +123,7 @@ body::after{
 }
 
 .logo-area h1{
-    font-family:'Playfair Display',serif;
+    font-family:'Merriweather',serif;
     color:var(--text-primary);
     font-size:27px;
 }
@@ -346,6 +349,9 @@ input[type="email"].form-input{
 </div>
 
 <button type="submit" class="btn-submit">Ingresar</button>
+<div class="card-footer" style="margin-top:18px;">
+    ¿No tienes cuenta? <a href="register.php" style="color:var(--accent);text-decoration:none;font-weight:600;">Regístrate aquí</a>
+</div>
 
 </form>
 

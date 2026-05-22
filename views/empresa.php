@@ -16,7 +16,7 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Delicia — Nuestra Empresa</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
@@ -64,7 +64,7 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
         border-bottom: 1px solid rgba(200,150,46,.22);
     }
     .top-logo {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
         font-size: 1.5rem; font-weight: 600; letter-spacing: .04em;
         color: var(--brown); text-decoration: none;
     }
@@ -109,7 +109,7 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     .hero-inner { position:relative; z-index:1; }
     .hero-inner h1 {
-        font-family:'Cormorant Garamond',serif;
+        font-family:'Merriweather',serif;
         font-size:clamp(2rem,4vw,3rem);
         font-weight:300; color:var(--cream); line-height:1.1;
         animation: fadeUp .6s .1s both;
@@ -163,7 +163,7 @@ $datos_empresa = $stmt->fetch(PDO::FETCH_ASSOC);
 
     .banner-info { position: relative; z-index:1; }
     .banner-nombre {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
         font-size: 1.6rem; font-weight: 600;
         color: var(--cream); margin-bottom: .4rem;
     }

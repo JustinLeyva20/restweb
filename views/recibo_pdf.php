@@ -15,7 +15,14 @@ $items = $conexion->prepare("SELECT * FROM detalle_pedidos_web WHERE id_pedido =
 $items->execute([$id]);
 $detalle = $items->fetchAll(PDO::FETCH_ASSOC);
 
-$config = $conexion->query("SELECT * FROM config LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+$configRow = $conexion->query("SELECT * FROM config LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+$config = [
+    'ruc' => $configRow['ruc'] ?? '',
+    'nombre' => $configRow['nombre'] ?? 'Restaurante',
+    'telefono' => $configRow['telefono'] ?? '',
+    'direccion' => $configRow['direccion'] ?? '',
+    'mensaje' => $configRow['mensaje'] ?? 'Gracias por su visita',
+];
 
 $iconoMetodo = ['EFECTIVO'=>'Efectivo','YAPE'=>'Yape','PLIN'=>'Plin','TARJETA'=>'Tarjeta'][$pedido['metodo_pago']] ?? $pedido['metodo_pago'];
 

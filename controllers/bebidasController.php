@@ -1,28 +1,20 @@
 <?php
 session_start();
 require "../config/conexion.php";
+require "../config/cloudinary.php";
 
-/* ────────────────────────────────────────────────
-   HELPER: sube una imagen a uploads/bebidas/
-   Devuelve el nombre del archivo o null
-──────────────────────────────────────────────── */
 function subirImagen(string $key): ?string
 {
     if (empty($_FILES[$key]['name'])) return null;
-
-    $dir = __DIR__ . "/../uploads/bebidas/";
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
 
     $ext      = strtolower(pathinfo($_FILES[$key]['name'], PATHINFO_EXTENSION));
     $allowed  = ['jpg','jpeg','png','webp','gif'];
 
     if (!in_array($ext, $allowed)) return null;
-    if ($_FILES[$key]['size'] > 2 * 1024 * 1024) return null; // máx 2 MB
+    if ($_FILES[$key]['size'] > 2 * 1024 * 1024) return null;
 
-    $nombre = uniqid('bebida_', true) . '.' . $ext;
-    move_uploaded_file($_FILES[$key]['tmp_name'], $dir . $nombre);
-
-    return $nombre;
+    $tmp = $_FILES[$key]['tmp_name'];
+    return cloudinaryUpload($tmp);
 }
 
 /* ────────────────────────────────────────────────
@@ -38,8 +30,7 @@ if (isset($_GET['eliminar'])) {
     $bebida = $stmt->fetch();
 
     if ($bebida && $bebida['imagen']) {
-        $ruta = __DIR__ . "/../uploads/bebidas/" . $bebida['imagen'];
-        if (file_exists($ruta)) unlink($ruta);
+        cloudinaryDelete($bebida['imagen']);
     }
 
     $conexion->prepare("DELETE FROM bebidas WHERE id = ?")->execute([$id]);
@@ -62,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $imagen = subirImagen('imagen'); // null si no se subió
 
         $stmt = $conexion->prepare(
-            "INSERT INTO bebidas (nombre, precio, imagen, fecha)
-             VALUES (?, ?, ?, CURDATE())"
+             "INSERT INTO bebidas (nombre, precio, imagen, fecha)
+              VALUES (?, ?, ?, CURRENT_DATE)"
         );
         $stmt->execute([$nombre, $precio, $imagen]);
 
@@ -86,8 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $vieja = $stmt->fetchColumn();
 
             if ($vieja) {
-                $ruta = __DIR__ . "/../uploads/bebidas/" . $vieja;
-                if (file_exists($ruta)) unlink($ruta);
+                cloudinaryDelete($vieja);
             }
 
             $stmt = $conexion->prepare(

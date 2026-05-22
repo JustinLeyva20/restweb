@@ -38,6 +38,17 @@ $sql = $conexion->prepare("SELECT * FROM bebidas ORDER BY nombre ASC");
 $sql->execute();
 $bebidas = $sql->fetchAll(PDO::FETCH_ASSOC);
 
+// Obtener items populares
+$popStmt = $conexion->query("SELECT LOWER(TRIM(t.nombre)) as nombre FROM (
+    SELECT nombre FROM detalle_pedidos
+    UNION ALL
+    SELECT nombre FROM detalle_pedidos_web
+) t GROUP BY LOWER(TRIM(t.nombre)) HAVING COUNT(*) >= 5");
+$populares = [];
+while ($row = $popStmt->fetch(PDO::FETCH_ASSOC)) {
+    $populares[$row['nombre']] = true;
+}
+
 // Convertir a JSON para JavaScript
 $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
 ?>
@@ -48,7 +59,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Delicia — Bebidas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --cream:     #F5EFE0;
@@ -84,7 +95,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             border-bottom: 1px solid rgba(200,150,46,.22);
         }
         .top-logo {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.5rem; font-weight: 600; letter-spacing: .04em;
             color: var(--brown); text-decoration: none;
         }
@@ -135,7 +146,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         }
         .page-hero-content { position: relative; z-index: 1; }
         .page-hero h1 {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: clamp(2rem, 4vw, 3rem);
             font-weight: 300; color: var(--cream); line-height: 1.1;
             animation: fadeUp .6s .1s both;
@@ -205,7 +216,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             text-align: center; padding: 4rem 1rem;
         }
         .no-results .nr-icon { font-size: 3.5rem; margin-bottom: 1rem; }
-        .no-results p { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--brown-md); }
+        .no-results p { font-family: 'Merriweather', serif; font-size: 1.4rem; color: var(--brown-md); }
 
         /* ── CARD ────────────────────────────── */
         .bebida-card {
@@ -301,7 +312,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             flex: 1; display: flex; flex-direction: column;
         }
         .card-name {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.25rem; font-weight: 600; color: var(--brown);
             line-height: 1.2;
         }
@@ -319,7 +330,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
     object-fit: contain;
 }
         .card-price {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.5rem; font-weight: 600; color: var(--gold);
             flex-shrink: 0;
         }
@@ -394,7 +405,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         }
         .cart-header-left { display: flex; align-items: center; gap: .7rem; }
         .cart-header h2 {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.4rem; font-weight: 400; color: var(--cream);
         }
         .cart-header-count {
@@ -425,7 +436,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
             color: var(--brown-md); text-align: center; gap: .8rem;
         }
         .cart-empty .ce-icon { font-size: 3.5rem; opacity: .4; }
-        .cart-empty p { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--brown-md); }
+        .cart-empty p { font-family: 'Merriweather', serif; font-size: 1.2rem; color: var(--brown-md); }
         .cart-empty small { font-size: .8rem; color: #a08060; }
 
         /* Ítem del carrito */
@@ -438,7 +449,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         .ci-emoji { font-size: 2rem; flex-shrink: 0; }
         .ci-info { flex: 1; min-width: 0; }
         .ci-name {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1rem; font-weight: 600; color: var(--brown);
             line-height: 1.25;
             white-space: normal;
@@ -460,7 +471,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         .ci-qty-btn.remove:hover { background: rgba(139,26,26,.1); }
         .ci-qty { font-size: .9rem; font-weight: 600; min-width: 20px; text-align: center; color: var(--brown); }
         .ci-subtotal {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.05rem; font-weight: 600; color: var(--gold);
             min-width: 60px; text-align: right; flex-shrink: 0;
         }
@@ -475,7 +486,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
         .cart-summary { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
         .cart-summary .label { font-size: .85rem; color: var(--brown-md); }
         .cart-total {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 2rem; font-weight: 600; color: var(--brown);
         }
         .cart-total span { font-size: .9rem; color: var(--gold); font-weight: 400; }
@@ -605,10 +616,11 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
 
             <?php
             $emojis = ['🥤','🧃','☕','🧋','🍹','🥛','🍵','🍶','🫖','🍺'];
-            $badges = ['Popular','Chef','Nuevo','Especial',''];
             foreach ($bebidas as $i => $bebida):
                 $emoji = $emojis[$i % count($emojis)];
-                $badge = $badges[$i % count($badges)];
+                $esNuevo  = strtotime($bebida['fecha']) > strtotime('-30 days');
+                $esPopular = isset($populares[strtolower(trim($bebida['nombre']))]);
+                $badge = $esNuevo ? 'Nuevo' : ($esPopular ? 'Popular' : '');
                 $nombreSafe = htmlspecialchars($bebida['nombre']);
                 $precio     = number_format((float)$bebida['precio'], 2);
             ?>
@@ -620,7 +632,7 @@ $bebidasJson = json_encode($bebidas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUO
 <div class="card-img">
     <?php
 $imgSrc = (!empty($bebida['imagen']))
-    ? '../uploads/bebidas/' . htmlspecialchars($bebida['imagen'])
+    ? htmlspecialchars($bebida['imagen'])
     : '../assets/img/default.jpg';
     ?>
     <img src="<?= $imgSrc ?>"
@@ -653,7 +665,7 @@ $imgSrc = (!empty($bebida['imagen']))
                                 id="addbtn-<?= $bebida['id'] ?>" 
                                 <?php
 $imgCart = (!empty($bebida['imagen']))
-    ? '../uploads/bebidas/' . htmlspecialchars($bebida['imagen'])
+    ? htmlspecialchars($bebida['imagen'])
     : '../assets/img/default.jpg';
 ?>
 onclick="addToCart(<?= $bebida['id'] ?>, '<?= addslashes($nombreSafe) ?>', <?= $bebida['precio'] ?>, '<?= $emoji ?>','<?= $imgCart ?>', 'bebida')"

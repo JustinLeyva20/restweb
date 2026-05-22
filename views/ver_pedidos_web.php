@@ -28,7 +28,7 @@ if (isset($_GET['accion'], $_GET['id'])) {
 
 $pedidos = $conexion->query("
     SELECT p.*,
-           GROUP_CONCAT(d.cantidad, 'x ', d.nombre SEPARATOR ' · ') AS detalle_resumen
+           STRING_AGG(CONCAT(d.cantidad, 'x ', d.nombre), ' · ') AS detalle_resumen
     FROM pedidos_web p
     LEFT JOIN detalle_pedidos_web d ON d.id_pedido = p.id
     GROUP BY p.id

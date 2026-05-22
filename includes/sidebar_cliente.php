@@ -71,7 +71,7 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
     overflow-y: auto;
     transition: left .32s cubic-bezier(.4,0,.2,1);
     background: linear-gradient(160deg, #2e1a08 0%, #3B2710 45%, #1f0f04 100%);
-    font-family: 'Cormorant Garamond', 'DM Sans', serif;
+    font-family: 'Merriweather', 'DM Sans', serif;
 }
 #sidebar.is-open { left: 0; }
 
@@ -117,7 +117,7 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
     box-shadow: 0 4px 14px rgba(200,150,46,.4);
 }
 .sb-logo-text {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.15rem;
     font-weight: 600;
     color: #F5EFE0;

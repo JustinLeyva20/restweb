@@ -465,10 +465,9 @@ input.img-row-input { display: none; }
                         <div class="img-edit-wrap">
 
                             <?php if (!empty($row['imagen'])): ?>
-                                <img src="../uploads/bebidas/<?= htmlspecialchars($row['imagen']) ?>"
+                                <img src="<?= htmlspecialchars($row['imagen']) ?>"
                                      class="bebida-thumb"
                                      id="thumb-<?= $row['id'] ?>"
-                                     onerror="this.onerror=null;this.src='../assets/img/<?= htmlspecialchars($row['imagen']) ?>'"
                                      alt="<?= htmlspecialchars($row['nombre']) ?>">
                             <?php else: ?>
                                 <div class="bebida-thumb-placeholder" id="thumb-<?= $row['id'] ?>">

@@ -61,7 +61,7 @@ $recomendados = array_merge($platosDia, $bebidasDiaStmt->fetchAll(PDO::FETCH_ASS
 
 $pedidosRecientesStmt = $conexion->prepare("
     SELECT p.*,
-           GROUP_CONCAT(CONCAT(d.cantidad, 'x ', d.nombre) SEPARATOR ' · ') AS detalle_resumen
+           STRING_AGG(CONCAT(d.cantidad, 'x ', d.nombre), ' · ') AS detalle_resumen
     FROM pedidos_web p
     LEFT JOIN detalle_pedidos_web d ON d.id_pedido = p.id
     WHERE p.usuario = ?
@@ -72,17 +72,27 @@ $pedidosRecientesStmt = $conexion->prepare("
 $pedidosRecientesStmt->execute([$usuario]);
 $pedidosRecientes = $pedidosRecientesStmt->fetchAll(PDO::FETCH_ASSOC);
 
-$config = $conexion->query("
+$configStmt = $conexion->query("
     SELECT ruc, nombre, telefono, direccion, mensaje
     FROM config
     ORDER BY id ASC
     LIMIT 1
-")->fetch(PDO::FETCH_ASSOC) ?: [
-    'ruc' => '',
-    'nombre' => 'Restaurante La Delicia',
-    'telefono' => '',
-    'direccion' => '',
-    'mensaje' => 'Gracias por su visita',
+");
+$configRow = $configStmt->fetch(PDO::FETCH_ASSOC);
+$config = [
+    'ruc' => $configRow['ruc'] ?? '',
+    'nombre' => $configRow['nombre'] ?? 'Restaurante La Delicia',
+    'telefono' => $configRow['telefono'] ?? '',
+    'direccion' => $configRow['direccion'] ?? '',
+    'mensaje' => $configRow['mensaje'] ?? 'Gracias por su visita',
+];
+
+$config = [
+    'ruc' => $configRow['ruc'] ?? '',
+    'nombre' => $configRow['nombre'] ?? 'Restaurante La Delicia',
+    'telefono' => $configRow['telefono'] ?? '',
+    'direccion' => $configRow['direccion'] ?? '',
+    'mensaje' => $configRow['mensaje'] ?? 'Gracias por su visita',
 ];
 ?>
 <!DOCTYPE html>
@@ -92,7 +102,7 @@ $config = $conexion->query("
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Delicia — Inicio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --cream:    #F5EFE0;
@@ -135,7 +145,7 @@ $config = $conexion->query("
             border-bottom: 1px solid rgba(200,150,46,.22);
         }
         .top-logo {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.55rem; font-weight: 600; letter-spacing: .04em;
             color: var(--brown); text-decoration: none;
         }
@@ -192,7 +202,7 @@ $config = $conexion->query("
             opacity: 0; animation: fadeUp .6s .2s forwards;
         }
         .hero-title {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: clamp(2.8rem,5vw,4.2rem);
             font-weight: 300; line-height: 1.08;
             color: var(--cream);
@@ -253,7 +263,7 @@ $config = $conexion->query("
         }
         .stat { text-align: center; padding: .5rem 1rem; }
         .stat-num {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 2rem; font-weight: 600; color: var(--gold-lt);
             display: block; line-height: 1;
         }
@@ -274,13 +284,13 @@ $config = $conexion->query("
             animation: fadeUp .6s .3s both;
         }
         .greeting-text h2 {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.75rem; font-weight: 400; color: var(--brown);
         }
         .greeting-text h2 strong { color: var(--gold); font-weight: 600; }
         .greeting-text p { font-size: .88rem; color: var(--brown-md); margin-top: .3rem; }
         .live-time {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 2.2rem; color: var(--brown-md);
             min-width: 100px; text-align: right;
         }
@@ -288,7 +298,7 @@ $config = $conexion->query("
         /* ── SECTION HEADER ── */
         .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.6rem; }
         .section-header h3 {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.7rem; font-weight: 400; color: var(--brown);
             white-space: nowrap;
         }
@@ -357,10 +367,10 @@ $config = $conexion->query("
             z-index: 2;
         }
         .plato-body { padding: 1rem 1.1rem 1.2rem; }
-        .plato-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; color: var(--brown); }
+        .plato-name { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 600; color: var(--brown); }
         .plato-desc { font-size: .78rem; color: #7a6040; margin-top: .2rem; line-height: 1.5; }
         .plato-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .9rem; }
-        .plato-price { font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 600; color: var(--gold); }
+        .plato-price { font-family: 'Merriweather', serif; font-size: 1.35rem; font-weight: 600; color: var(--gold); }
         .btn-add {
             width: 34px; height: 34px; border-radius: 50%; border: none;
             background: var(--brown); color: #fff; font-size: 1.2rem;
@@ -425,7 +435,7 @@ $config = $conexion->query("
 
         .action-icon  { font-size: 2.2rem; }
         .action-label {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Merriweather', serif;
             font-size: 1.2rem; font-weight: 600;
             color: #fff;
             text-shadow: 0 1px 6px rgba(0,0,0,.4);
@@ -459,7 +469,7 @@ $config = $conexion->query("
         .pedido-info { flex: 1; min-width: 160px; }
         .pedido-info strong { font-size: .95rem; color: var(--brown); display: block; }
         .pedido-info span   { font-size: .78rem; color: #8a6d40; }
-        .pedido-total { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; color: var(--gold); }
+        .pedido-total { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 600; color: var(--gold); }
         .pedido-estado {
             font-size: .7rem; font-weight: 600; letter-spacing: .1em;
             text-transform: uppercase; padding: .3rem .8rem; border-radius: 2rem;
@@ -569,7 +579,7 @@ $config = $conexion->query("
 
                 // Ruta de la imagen desde la carpeta uploads
                 $imgFile  = !empty($item['imagen']) ? trim($item['imagen']) : '';
-                $imgPath  = $imgFile ? "../uploads/{$carpeta}/" . htmlspecialchars($imgFile) : '';
+                $imgPath  = $imgFile ? htmlspecialchars($imgFile) : '';
             ?>
             <a class="plato-card" href="<?= $href ?>" style="text-decoration:none;color:inherit;">
                 <div class="plato-img">
@@ -694,11 +704,6 @@ $config = $conexion->query("
         </div>
 
     </div><!-- /content -->
-
-    <footer class="site-footer">
-        RUC <?= htmlspecialchars($config['ruc']) ?> · <span><?= htmlspecialchars($config['nombre']) ?></span> · <?= htmlspecialchars($config['direccion']) ?> · ☎ <?= htmlspecialchars($config['telefono']) ?>
-        &nbsp;|&nbsp; <?= htmlspecialchars($config['mensaje']) ?>
-    </footer>
 
 </main>
 

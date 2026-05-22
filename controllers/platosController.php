@@ -1,28 +1,24 @@
 <?php
 session_start();
 require "../config/conexion.php";
+require "../config/cloudinary.php";
 
 /* ────────────────────────────────────────────────
-   HELPER: sube una imagen a uploads/platos/
-   Devuelve el nombre del archivo o null
+   HELPER: sube imagen a Cloudinary
+   Devuelve la URL de Cloudinary o null
 ──────────────────────────────────────────────── */
 function subirImagen(string $key): ?string
 {
     if (empty($_FILES[$key]['name'])) return null;
 
-    $dir = __DIR__ . "/../uploads/platos/";
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
-
     $ext      = strtolower(pathinfo($_FILES[$key]['name'], PATHINFO_EXTENSION));
     $allowed  = ['jpg','jpeg','png','webp','gif'];
 
     if (!in_array($ext, $allowed)) return null;
-    if ($_FILES[$key]['size'] > 2 * 1024 * 1024) return null; // máx 2 MB
+    if ($_FILES[$key]['size'] > 2 * 1024 * 1024) return null;
 
-    $nombre = uniqid('plato_', true) . '.' . $ext;
-    move_uploaded_file($_FILES[$key]['tmp_name'], $dir . $nombre);
-
-    return $nombre;
+    $tmp = $_FILES[$key]['tmp_name'];
+    return cloudinaryUpload($tmp);
 }
 
 /* ────────────────────────────────────────────────
@@ -38,8 +34,7 @@ if (isset($_GET['eliminar'])) {
     $plato = $stmt->fetch();
 
     if ($plato && $plato['imagen']) {
-        $ruta = __DIR__ . "/../uploads/platos/" . $plato['imagen'];
-        if (file_exists($ruta)) unlink($ruta);
+        cloudinaryDelete($plato['imagen']);
     }
 
     $conexion->prepare("DELETE FROM platos WHERE id = ?")->execute([$id]);
@@ -62,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $imagen = subirImagen('imagen'); // null si no se subió
 
         $stmt = $conexion->prepare(
-            "INSERT INTO platos (nombre, precio, imagen, fecha)
-             VALUES (?, ?, ?, CURDATE())"
+             "INSERT INTO platos (nombre, precio, imagen, fecha)
+              VALUES (?, ?, ?, CURRENT_DATE)"
         );
         $stmt->execute([$nombre, $precio, $imagen]);
 
@@ -86,8 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $vieja = $stmt->fetchColumn();
 
             if ($vieja) {
-                $ruta = __DIR__ . "/../uploads/platos/" . $vieja;
-                if (file_exists($ruta)) unlink($ruta);
+                cloudinaryDelete($vieja);
             }
 
             $stmt = $conexion->prepare(

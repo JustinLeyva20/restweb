@@ -11,7 +11,14 @@ if ($_SESSION['rol'] === 'Administrador') {
 
 $usuario       = $_SESSION['usuario'];
 $resultado     = null;
-$tipoResultado = 'ok';
+
+// Obtener datos del usuario para autocompletar
+$stmtUser = $conexion->prepare("SELECT telefono, direccion FROM usuarios WHERE correo = ? OR nombre = ?");
+$stmtUser->execute([$usuario, $usuario]);
+$userData = $stmtUser->fetch(PDO::FETCH_ASSOC);
+$userPhone   = $userData['telefono'] ?? '';
+$userAddress = $userData['direccion'] ?? '';
+$tipoResultado = null;
 $pedidoId      = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cartData'])) {
@@ -82,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cartData'])) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>La Delicia — Delivery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Lucide Icons -->
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
@@ -127,7 +134,7 @@ body {
     border-bottom: 1px solid rgba(200,150,46,.22);
 }
 .top-logo {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.5rem; font-weight: 600;
     color: var(--brown); text-decoration: none;
 }
@@ -149,7 +156,7 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .hero-inner { position:relative; z-index:1; }
 .hero-inner h1 {
-    font-family:'Cormorant Garamond',serif;
+    font-family:'Merriweather',serif;
     font-size:clamp(2rem,4vw,3rem); font-weight:300;
     color:var(--cream); animation: fadeUp .6s .1s both;
 }
@@ -194,7 +201,7 @@ main { padding-top: 64px; min-height: 100vh; }
 .resultado-icon svg { width: 38px; height: 38px; stroke-width: 1.6; }
 
 .resultado-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.9rem; font-weight: 600;
 }
 .ok    .resultado-title { color: #166534; }
@@ -228,7 +235,7 @@ main { padding-top: 64px; min-height: 100vh; }
     animation: fadeUp .5s .1s both;
 }
 .form-card h2 {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.4rem; font-weight: 600; color: var(--brown);
     margin-bottom: 1.4rem; padding-bottom: .8rem;
     border-bottom: 1px solid var(--warm);
@@ -289,13 +296,15 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .metodo-btn input { display: none; }
 .metodo-icon {
-    width: 36px; height: 36px; border-radius: 8px;
+    width: 49px; height: 40px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     background: rgba(200,150,46,.1); color: var(--gold);
     transition: background .2s;
+    overflow: hidden;
 }
 .metodo-btn.selected .metodo-icon { background: rgba(200,150,46,.2); }
 .metodo-icon svg { width: 18px; height: 18px; stroke-width: 1.8; }
+.metodo-img { width: 100%; height: 100%; object-fit: cover; }
 .metodo-label { font-size: .72rem; font-weight: 600; color: var(--brown-md); }
 .metodo-btn.selected .metodo-label { color: var(--gold); }
 
@@ -328,7 +337,7 @@ main { padding-top: 64px; min-height: 100vh; }
     display: flex; align-items: center; justify-content: space-between;
 }
 .resumen-header h3 {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.2rem; font-weight: 400; color: var(--cream);
     display: flex; align-items: center; gap: .5rem;
 }
@@ -389,7 +398,7 @@ main { padding-top: 64px; min-height: 100vh; }
 .resumen-total-row { display: flex; justify-content: space-between; align-items: baseline; }
 .resumen-total-label { font-size: .85rem; color: var(--brown-md); }
 .resumen-total-price {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.8rem; font-weight: 600; color: var(--brown);
 }
 .resumen-total-price span { font-size: .85rem; color: var(--gold); }
@@ -407,7 +416,7 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .carrito-vacio .cv-icon svg { width: 36px; height: 36px; stroke-width: 1.5; }
 .carrito-vacio h3 {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.6rem; color: var(--brown-md); margin-bottom: .5rem;
 }
 .carrito-vacio p { color: #a08060; margin-bottom: 1.5rem; }
@@ -517,6 +526,7 @@ main { padding-top: 64px; min-height: 100vh; }
                                maxlength="15"
                                pattern="[0-9+\s\-]{7,15}"
                                title="Ingresa un número de teléfono válido"
+                               value="<?= htmlspecialchars($userPhone) ?>"
                                required>
                     </div>
                 </div>
@@ -526,7 +536,8 @@ main { padding-top: 64px; min-height: 100vh; }
                         <i data-lucide="map-pin"></i> Dirección de entrega *
                     </label>
                     <textarea name="direccion" class="form-textarea"
-                              placeholder="Ej: Av. Lima 345, Miraflores, piso 3..." required></textarea>
+                              placeholder="Ej: Av. Lima 345, Miraflores, piso 3..."
+                              required><?= htmlspecialchars($userAddress) ?></textarea>
                 </div>
 
                 <div class="form-group">
@@ -535,19 +546,35 @@ main { padding-top: 64px; min-height: 100vh; }
                     </div>
                     <div class="metodos-grid">
                         <label class="metodo-btn" onclick="seleccionarPago('EFECTIVO', this)">
-                            <span class="metodo-icon"><i data-lucide="banknote"></i></span>
+                            <span class="metodo-icon">
+                                <img src="../assets/img/efectivo.png" alt="Efectivo" class="metodo-img"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                <i data-lucide="banknote" style="display:none"></i>
+                            </span>
                             <span class="metodo-label">Efectivo</span>
                         </label>
                         <label class="metodo-btn" onclick="seleccionarPago('YAPE', this)">
-                            <span class="metodo-icon"><i data-lucide="smartphone"></i></span>
+                            <span class="metodo-icon">
+                                <img src="../assets/img/yape.jpg" alt="Yape" class="metodo-img"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                <i data-lucide="smartphone" style="display:none"></i>
+                            </span>
                             <span class="metodo-label">Yape</span>
                         </label>
                         <label class="metodo-btn" onclick="seleccionarPago('PLIN', this)">
-                            <span class="metodo-icon"><i data-lucide="zap"></i></span>
+                            <span class="metodo-icon">
+                                <img src="../assets/img/plin.png" alt="Plin" class="metodo-img"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                <i data-lucide="zap" style="display:none"></i>
+                            </span>
                             <span class="metodo-label">Plin</span>
                         </label>
                         <label class="metodo-btn" onclick="seleccionarPago('TARJETA', this)">
-                            <span class="metodo-icon"><i data-lucide="credit-card"></i></span>
+                            <span class="metodo-icon">
+                                <img src="../assets/img/tarjeta.png" alt="Tarjeta" class="metodo-img"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                <i data-lucide="credit-card" style="display:none"></i>
+                            </span>
                             <span class="metodo-label">Tarjeta</span>
                         </label>
                     </div>

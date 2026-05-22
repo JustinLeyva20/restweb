@@ -1,13 +1,11 @@
 <?php
 session_start();
 require "../config/conexion.php";
+require "../config/cloudinary.php";
 
 function subirImagen(string $key): ?string
 {
     if (empty($_FILES[$key]['name'])) return null;
-
-    $dir = __DIR__ . "/../uploads/postres/";
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
 
     $ext      = strtolower(pathinfo($_FILES[$key]['name'], PATHINFO_EXTENSION));
     $allowed  = ['jpg','jpeg','png','webp','gif'];
@@ -15,10 +13,8 @@ function subirImagen(string $key): ?string
     if (!in_array($ext, $allowed)) return null;
     if ($_FILES[$key]['size'] > 2 * 1024 * 1024) return null;
 
-    $nombre = uniqid('postre_', true) . '.' . $ext;
-    move_uploaded_file($_FILES[$key]['tmp_name'], $dir . $nombre);
-
-    return $nombre;
+    $tmp = $_FILES[$key]['tmp_name'];
+    return cloudinaryUpload($tmp);
 }
 
 if (isset($_GET['eliminar'])) {
@@ -30,8 +26,7 @@ if (isset($_GET['eliminar'])) {
     $postre = $stmt->fetch();
 
     if ($postre && $postre['imagen']) {
-        $ruta = __DIR__ . "/../uploads/postres/" . $postre['imagen'];
-        if (file_exists($ruta)) unlink($ruta);
+        cloudinaryDelete($postre['imagen']);
     }
 
     $conexion->prepare("DELETE FROM postres WHERE id = ?")->execute([$id]);
@@ -50,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $imagen = subirImagen('imagen');
 
         $stmt = $conexion->prepare(
-            "INSERT INTO postres (nombre, precio, imagen, fecha)
-             VALUES (?, ?, ?, CURDATE())"
+             "INSERT INTO postres (nombre, precio, imagen, fecha)
+              VALUES (?, ?, ?, CURRENT_DATE)"
         );
         $stmt->execute([$nombre, $precio, $imagen]);
 
@@ -72,8 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $vieja = $stmt->fetchColumn();
 
             if ($vieja) {
-                $ruta = __DIR__ . "/../uploads/postres/" . $vieja;
-                if (file_exists($ruta)) unlink($ruta);
+                cloudinaryDelete($vieja);
             }
 
             $stmt = $conexion->prepare(

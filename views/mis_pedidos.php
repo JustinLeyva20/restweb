@@ -13,7 +13,7 @@ $usuario = $_SESSION['usuario'];
 
 $pedidos = $conexion->prepare("
     SELECT p.*, 
-           GROUP_CONCAT(d.cantidad, 'x ', d.nombre SEPARATOR ' · ') AS detalle_resumen
+           STRING_AGG(CONCAT(d.cantidad, 'x ', d.nombre), ' · ') AS detalle_resumen
     FROM pedidos_web p
     LEFT JOIN detalle_pedidos_web d ON d.id_pedido = p.id
     WHERE p.usuario = ?
@@ -30,7 +30,7 @@ $pedidos = $pedidos->fetchAll(PDO::FETCH_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>La Delicia — Mis Pedidos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Lucide Icons -->
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
@@ -74,7 +74,7 @@ body {
     border-bottom: 1px solid rgba(200,150,46,.22);
 }
 .top-logo {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.5rem; font-weight: 600;
     color: var(--brown); text-decoration: none;
 }
@@ -96,7 +96,7 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .hero-inner { position:relative; z-index:1; }
 .hero-inner h1 {
-    font-family:'Cormorant Garamond',serif;
+    font-family:'Merriweather',serif;
     font-size:clamp(2rem,4vw,3rem); font-weight:300;
     color:var(--cream); animation: fadeUp .6s .1s both;
 }
@@ -149,7 +149,7 @@ main { padding-top: 64px; min-height: 100vh; }
 }
 .empty-state .es-icon svg { width: 36px; height: 36px; stroke-width: 1.5; }
 .empty-state h3 {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.6rem; color: var(--brown-md); margin-bottom: .5rem;
 }
 .empty-state p { color: #a08060; font-size: .9rem; margin-bottom: 1.5rem; }
@@ -196,7 +196,7 @@ main { padding-top: 64px; min-height: 100vh; }
 .pc-header.CANCELADO  { background: linear-gradient(135deg,#fff1f2,#ffe4e6); border-bottom:2px solid #fecdd3; }
 
 .pc-id {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.1rem; font-weight: 600; color: var(--brown);
 }
 .pc-fecha { font-size: .72rem; color: var(--brown-md); margin-top: .1rem; }
@@ -242,7 +242,7 @@ main { padding-top: 64px; min-height: 100vh; }
     display: flex; justify-content: space-between; align-items: center;
 }
 .pc-total {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.4rem; font-weight: 600; color: var(--gold);
 }
 .pc-total small { font-size: .8rem; color: var(--brown-md); font-weight: 400; }
@@ -260,7 +260,7 @@ main { padding-top: 64px; min-height: 100vh; }
     text-align: center; padding: 3rem 1rem;
 }
 .empty-filtro p {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Merriweather', serif;
     font-size: 1.3rem; color: var(--brown-md);
     display: flex; align-items: center; justify-content: center; gap: .5rem;
 }

@@ -79,7 +79,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Delicia — Mesas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
@@ -136,7 +136,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
         border-bottom: 1px solid rgba(200,150,46,.22);
     }
     .top-logo {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
         font-size: 1.5rem; font-weight: 600; letter-spacing: .04em;
         color: var(--brown); text-decoration: none;
     }
@@ -179,7 +179,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     }
     .hero-inner { position:relative; z-index:1; }
     .hero-inner h1 {
-        font-family:'Cormorant Garamond',serif;
+        font-family:'Merriweather',serif;
         font-size:clamp(2rem,4vw,3rem);
         font-weight:300; color:var(--cream); line-height:1.1;
         animation: fadeUp .6s .1s both;
@@ -243,7 +243,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     /* ── PLANO ── */
     .floor-area { padding: 2.5rem 3rem; position:relative; }
     .floor-label {
-        font-family:'Cormorant Garamond',serif;
+        font-family:'Merriweather',serif;
         font-size:1.4rem; font-weight:400; color:var(--brown);
         margin-bottom:1.6rem;
         display:flex; align-items:center; gap:.8rem;
@@ -304,7 +304,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     .selected .mesa-icon svg{ color: var(--gold);     }
 
     .mesa-num {
-        font-family:'Cormorant Garamond',serif;
+        font-family:'Merriweather',serif;
         font-size:1.1rem; font-weight:600; color:var(--brown);
     }
     .mesa-status {
@@ -335,7 +335,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     .reserva-panel::-webkit-scrollbar-thumb { background:var(--warm); border-radius:2px; }
 
     .panel-title {
-        font-family:'Cormorant Garamond',serif;
+        font-family:'Merriweather',serif;
         font-size:1.5rem; font-weight:400; color:var(--brown);
         border-bottom:1px solid var(--warm); padding-bottom:.8rem;
     }
@@ -360,7 +360,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     }
     .preview-icon svg { width: 32px; height: 32px; stroke-width: 1.5; color: var(--gold); }
     .preview-sala { font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--brown-md); }
-    .preview-mesa { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:600; color:var(--brown); }
+    .preview-mesa { font-family:'Merriweather',serif; font-size:1.3rem; font-weight:600; color:var(--brown); }
     .preview-estado {
         font-size:.72rem; color:var(--green); font-weight:600;
         letter-spacing:.06em; text-transform:uppercase;
@@ -469,7 +469,7 @@ $ocupadasJson = json_encode(array_keys($ocupadasSet), JSON_HEX_TAG);
     }
     .modal-icon svg { width: 30px; height: 30px; stroke-width: 2; }
     .modal-title {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: 'Merriweather', serif;
         font-size: 1.7rem; font-weight: 600;
         color: var(--brown); margin-bottom: .7rem;
     }
