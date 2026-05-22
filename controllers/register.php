@@ -8,7 +8,7 @@ $pass     = $_POST['pass']          ?? '';
 $confirm  = $_POST['pass_confirm']  ?? '';
 $telefono = trim($_POST['telefono'] ?? '');
 $direccion= trim($_POST['direccion']?? '');
-$rol      = 'usuario'; // Siempre fijo, nunca del POST
+$rol      = 'Usuario'; // Siempre fijo, nunca del POST
 
 // Validar campos obligatorios
 if (empty($nombre) || empty($correo) || empty($pass) || empty($confirm)) {

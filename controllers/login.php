@@ -48,7 +48,11 @@ else {
         $_SESSION['usuario'] = $user['nombre'];
         $_SESSION['rol'] = $user['rol'];
 
-        header("Location: ../views/dashboard.php");
+        if ($user['rol'] === 'Administrador') {
+            header("Location: ../views/dashboard.php");
+        } else {
+            header("Location: ../views/platos_usuario.php");
+        }
         exit;
 
     } else {

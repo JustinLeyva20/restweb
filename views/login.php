@@ -31,6 +31,9 @@
     --error-bg:rgba(220,80,60,.15);
     --error-border:rgba(220,80,60,.4);
     --error-text:#F5A49A;
+    --success-bg:rgba(60,180,100,.15);
+    --success-border:rgba(60,180,100,.4);
+    --success-text:#7DDBA0;
 }
 
 body{
@@ -288,6 +291,10 @@ input[type="email"].form-input{
 </div>
 
 <div class="divider"></div>
+
+<?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
+    <div class="alert" style="background:var(--success-bg);border-color:var(--success-border);color:var(--success-text);">¡Cuenta creada exitosamente! Inicia sesión.</div>
+<?php endif; ?>
 
 <?php if (isset($_GET['error'])): ?>
     <?php if ($_GET['error'] == 1): ?>

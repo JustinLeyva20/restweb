@@ -236,7 +236,6 @@ select.form-input option{background:#1a1510;color:var(--text-primary);}
     <?php endif; ?>
 
     <form action="../controllers/register.php" method="POST" autocomplete="off">
-        <input type="hidden" name="rol" value="usuario">
 
         <div class="fields-grid">
 

@@ -476,7 +476,7 @@ body::after {
                             </svg>
                             <select class="rol-select rol" style="max-width:180px;">
                                 <option <?= $row['rol'] === 'Administrador' ? 'selected' : '' ?>>Administrador</option>
-                                <option <?= $row['rol'] === 'Usuario'       ? 'selected' : '' ?>>Usuario</option>
+                                <option <?= in_array($row['rol'], ['Usuario', 'usuario']) ? 'selected' : '' ?>>Usuario</option>
                             </select>
                         </div>
                     </td>
