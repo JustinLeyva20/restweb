@@ -7,6 +7,9 @@ require "../config/conexion.php";
 if (!isset($_SESSION['usuario'])) {
     header("Location: login.php"); exit;
 }
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php"); exit;
+}
 
 // Cambiar estado
 if (isset($_GET['accion'], $_GET['id'])) {
@@ -28,7 +31,7 @@ if (isset($_GET['accion'], $_GET['id'])) {
 
 $pedidos = $conexion->query("
     SELECT p.*,
-           STRING_AGG(CONCAT(d.cantidad, 'x ', d.nombre), ' · ') AS detalle_resumen
+           GROUP_CONCAT(d.cantidad, 'x ', d.nombre SEPARATOR ' · ') AS detalle_resumen
     FROM pedidos_web p
     LEFT JOIN detalle_pedidos_web d ON d.id_pedido = p.id
     GROUP BY p.id

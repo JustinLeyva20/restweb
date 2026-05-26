@@ -13,7 +13,8 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     $correo = trim($data['correo'] ?? '');
-    $pass   = $data['pass'] ?? '';
+    $pass   = $data['password'] ?? $data['pass'] ?? '';
+
 
     if (empty($correo) || empty($pass)) {
         http_response_code(400);
@@ -21,7 +22,7 @@ if ($method === 'POST') {
         exit;
     }
 
-    $stmt = $conexion->prepare("SELECT id, nombre, correo, pass, telefono, direccion FROM usuarios WHERE correo = ?");
+    $stmt = $conexion->prepare("SELECT id, nombre, correo, pass, telefono, direccion, created_at FROM usuarios WHERE correo = ?");
     $stmt->execute([$correo]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -32,11 +33,12 @@ if ($method === 'POST') {
     }
 
     echo json_encode([
-        'id'       => (int)$user['id'],
-        'nombre'   => $user['nombre'],
-        'correo'   => $user['correo'],
-        'telefono' => $user['telefono'],
-        'direccion'=> $user['direccion']
+        'id'             => (int)$user['id'],
+        'nombre'         => $user['nombre'],
+        'correo'         => $user['correo'],
+        'telefono'       => $user['telefono'],
+        'direccion'      => $user['direccion'],
+        'fecha_registro' => $user['created_at'] ?? ''
     ]);
 } else {
     http_response_code(405);

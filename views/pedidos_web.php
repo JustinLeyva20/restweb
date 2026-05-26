@@ -522,9 +522,8 @@ main { padding-top: 64px; min-height: 100vh; }
                             <i data-lucide="phone"></i> Teléfono *
                         </label>
                         <input type="tel" name="telefono" class="form-input"
-                               placeholder="Ej: 987654321"
-                               maxlength="15"
-                               pattern="[0-9+\s\-]{7,15}"
+                               placeholder="Ej: 987654321" maxlength="9"
+                               oninput="this.value=this.value.replace(/\D/g,'')"
                                title="Ingresa un número de teléfono válido"
                                value="<?= htmlspecialchars($userPhone) ?>"
                                required>

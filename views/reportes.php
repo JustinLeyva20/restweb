@@ -6,6 +6,10 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
     exit;
 }
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php");
+    exit;
+}
 
 // Cambiar estado vía AJAX (POST JSON)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {

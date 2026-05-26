@@ -404,9 +404,10 @@ background-size: cover;
                     <label class="form-label-mc">
                         <i data-lucide="phone"></i> Teléfono
                     </label>
-                    <input type="tel" name="telefono" class="mc-input"
-                           placeholder="Ej: 987654321"
-                           value="<?= htmlspecialchars($mi_cuenta['telefono'] ?? '') ?>">
+<input type="tel" name="telefono" class="mc-input"
+       placeholder="Ej: 987654321" maxlength="9"
+       oninput="this.value=this.value.replace(/\D/g,'')"
+       value="<?= htmlspecialchars($mi_cuenta['telefono'] ?? '') ?>">
                 </div>
 
                 <div class="form-group">

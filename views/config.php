@@ -6,6 +6,10 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
     exit;
 }
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php");
+    exit;
+}
 
 $sql = $conexion->query("SELECT * FROM config LIMIT 1");
 $config = $sql->fetch(PDO::FETCH_ASSOC) ?? [];
@@ -360,7 +364,7 @@ method="POST">
 
 <div class="mb-3">
 <label class="form-label">Teléfono</label>
-<input type="text" name="telefono" class="form-control" value="<?= $telefono ?>">
+<input type="text" name="telefono" class="form-control" maxlength="9" oninput="this.value=this.value.replace(/\D/g,'')" value="<?= $telefono ?>">
 </div>
 
 <div class="mb-3">

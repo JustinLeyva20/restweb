@@ -6,6 +6,10 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
     exit;
 }
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php");
+    exit;
+}
 
 $sql = $conexion->query("SELECT * FROM platos");
 $rows = $sql->fetchAll(PDO::FETCH_ASSOC);

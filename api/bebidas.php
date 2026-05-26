@@ -28,7 +28,7 @@ foreach ($items as $p) {
         'id'     => (int)$p['id'],
         'nombre' => $p['nombre'],
         'precio' => (float)$p['precio'],
-        'imagen' => $p['imagen'] ? ('../uploads/bebidas/' . $p['imagen']) : '',
+        'imagen' => $p['imagen'] ? (str_starts_with($p['imagen'], 'http') ? $p['imagen'] : $baseUrl . 'uploads/bebidas/' . $p['imagen']) : '',
         'badge'  => $esNuevo ? 'Nuevo' : ($esPopular ? 'Popular' : ''),
         'fecha'  => $p['fecha']
     ];

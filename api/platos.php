@@ -30,7 +30,7 @@ foreach ($platos as $p) {
         'id'     => (int)$p['id'],
         'nombre' => $p['nombre'],
         'precio' => (float)$p['precio'],
-        'imagen' => $p['imagen'] ? ('../uploads/platos/' . $p['imagen']) : '',
+        'imagen' => $p['imagen'] ? (str_starts_with($p['imagen'], 'http') ? $p['imagen'] : $baseUrl . 'uploads/platos/' . $p['imagen']) : '',
         'badge'  => $badge,
         'fecha'  => $p['fecha']
     ];

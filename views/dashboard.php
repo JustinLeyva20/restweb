@@ -4,6 +4,10 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
     exit;
 }
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php");
+    exit;
+}
 
 require "../config/conexion.php";
 

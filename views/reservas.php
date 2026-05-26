@@ -5,6 +5,9 @@ require "../config/conexion.php";
 if (!isset($_SESSION['usuario'])) {
     header("Location: login.php"); exit;
 }
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php"); exit;
+}
 
 // Cambiar estado con motivo
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'], $_POST['id'])) {

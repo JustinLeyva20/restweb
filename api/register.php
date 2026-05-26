@@ -16,7 +16,7 @@ require_once __DIR__ . '/../config/conexion.php';
 $data = json_decode(file_get_contents('php://input'), true);
 $nombre    = trim($data['nombre'] ?? '');
 $correo    = trim($data['correo'] ?? '');
-$pass      = $data['pass'] ?? '';
+$pass      = $data['password'] ?? $data['pass'] ?? '';
 $telefono  = trim($data['telefono'] ?? '');
 $direccion = trim($data['direccion'] ?? '');
 
@@ -38,11 +38,12 @@ $hash = password_hash($pass, PASSWORD_DEFAULT);
 $stmt = $conexion->prepare("INSERT INTO usuarios (nombre, correo, pass, telefono, direccion, rol) VALUES (?, ?, ?, ?, ?, 'cliente')");
 $stmt->execute([$nombre, $correo, $hash, $telefono, $direccion]);
 
-$id = $conexion->lastInsertId();
-echo json_encode([
-    'id'       => (int)$id,
-    'nombre'   => $nombre,
-    'correo'   => $correo,
-    'telefono' => $telefono,
-    'direccion'=> $direccion
-]);
+    $id = $conexion->lastInsertId();
+    echo json_encode([
+        'id'             => (int)$id,
+        'nombre'         => $nombre,
+        'correo'         => $correo,
+        'telefono'       => $telefono,
+        'direccion'      => $direccion,
+        'fecha_registro' => date('Y-m-d H:i:s')
+    ]);

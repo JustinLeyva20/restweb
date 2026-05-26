@@ -17,7 +17,7 @@ if ($method === 'GET') {
         echo json_encode(['error' => 'Correo requerido']);
         exit;
     }
-    $stmt = $conexion->prepare("SELECT id, nombre, correo, telefono, direccion FROM usuarios WHERE correo = ?");
+    $stmt = $conexion->prepare("SELECT id, nombre, correo, telefono, direccion, created_at FROM usuarios WHERE correo = ?");
     $stmt->execute([$correo]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$user) {
@@ -26,15 +26,17 @@ if ($method === 'GET') {
         exit;
     }
     echo json_encode([
-        'id'       => (int)$user['id'],
-        'nombre'   => $user['nombre'],
-        'correo'   => $user['correo'],
-        'telefono' => $user['telefono'],
-        'direccion'=> $user['direccion']
+        'id'             => (int)$user['id'],
+        'nombre'         => $user['nombre'],
+        'correo'         => $user['correo'],
+        'telefono'       => $user['telefono'],
+        'direccion'      => $user['direccion'],
+        'fecha_registro' => $user['created_at'] ?? ''
     ]);
 } elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents('php://input'), true);
     $correo    = trim($data['correo'] ?? '');
+    $nombre    = trim($data['nombre'] ?? '');
     $telefono  = trim($data['telefono'] ?? '');
     $direccion = trim($data['direccion'] ?? '');
 
@@ -43,8 +45,8 @@ if ($method === 'GET') {
         echo json_encode(['error' => 'Correo requerido']);
         exit;
     }
-    $stmt = $conexion->prepare("UPDATE usuarios SET telefono = ?, direccion = ? WHERE correo = ?");
-    $stmt->execute([$telefono, $direccion, $correo]);
+    $stmt = $conexion->prepare("UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ? WHERE correo = ?");
+    $stmt->execute([$nombre, $telefono, $direccion, $correo]);
     echo json_encode(['mensaje' => 'Perfil actualizado']);
 } else {
     http_response_code(405);

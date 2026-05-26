@@ -1,5 +1,11 @@
 <?php
+session_start();
 require "../config/conexion.php";
+
+if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'Administrador') {
+    http_response_code(403);
+    exit;
+}
 
 # GUARDAR
 if ($_POST['accion'] == "guardar") {

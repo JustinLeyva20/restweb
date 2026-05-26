@@ -13,7 +13,7 @@ $usuario = $_SESSION['usuario'];
 
 $pedidos = $conexion->prepare("
     SELECT p.*, 
-           STRING_AGG(CONCAT(d.cantidad, 'x ', d.nombre), ' · ') AS detalle_resumen
+           GROUP_CONCAT(d.cantidad, 'x ', d.nombre SEPARATOR ' · ') AS detalle_resumen
     FROM pedidos_web p
     LEFT JOIN detalle_pedidos_web d ON d.id_pedido = p.id
     WHERE p.usuario = ?

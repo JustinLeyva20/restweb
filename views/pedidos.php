@@ -4,6 +4,11 @@ require "../config/conexion.php";
 
 if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
+    exit;
+}
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php");
+    exit;
 }
 
 $platos = $conexion->query("SELECT * FROM platos")->fetchAll();

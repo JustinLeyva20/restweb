@@ -456,7 +456,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
                         Teléfono
                     </label>
                     <input type="tel" name="telefono" class="form-input"
-                           placeholder="Ej: 987654321"
+                           placeholder="Ej: 987654321" maxlength="9"
+                           oninput="this.value=this.value.replace(/\D/g,'')"
                            value="<?= htmlspecialchars($mi_cuenta['telefono'] ?? '') ?>">
                 </div>
 

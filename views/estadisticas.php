@@ -6,6 +6,10 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
     exit;
 }
+if ($_SESSION['rol'] !== 'Administrador') {
+    header("Location: login.php");
+    exit;
+}
 
 $mes    = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
 $anio   = isset($_GET['anio']) ? (int)$_GET['anio'] : (int)date('Y');
@@ -15,18 +19,18 @@ $anio   = max(2020, min(2099, $anio));
 $dias_mes = (int)date('t', mktime(0, 0, 0, $mes, 1, $anio));
 
 // ── INGRESOS (web, entregados) ──
-$stmt = $conexion->prepare("SELECT COALESCE(SUM(total),0) FROM pedidos_web WHERE estado='ENTREGADO' AND EXTRACT(MONTH FROM created_at)=? AND EXTRACT(YEAR FROM created_at)=?");
+$stmt = $conexion->prepare("SELECT COALESCE(SUM(total),0) FROM pedidos_web WHERE estado='ENTREGADO' AND MONTH(created_at)=? AND YEAR(created_at)=?");
 $stmt->execute([$mes, $anio]);
 $ventas = (float)$stmt->fetchColumn();
 
 // ── ÓRDENES ──
-$stmt = $conexion->prepare("SELECT COUNT(*) FROM pedidos_web WHERE EXTRACT(MONTH FROM created_at)=? AND EXTRACT(YEAR FROM created_at)=?");
+$stmt = $conexion->prepare("SELECT COUNT(*) FROM pedidos_web WHERE MONTH(created_at)=? AND YEAR(created_at)=?");
 $stmt->execute([$mes, $anio]);
 $total_ordenes = (int)$stmt->fetchColumn();
 
 // ── ÓRDENES POR ESTADO ──
 $estados = [];
-$stmt = $conexion->prepare("SELECT estado, COUNT(*) as c FROM pedidos_web WHERE EXTRACT(MONTH FROM created_at)=? AND EXTRACT(YEAR FROM created_at)=? GROUP BY estado");
+$stmt = $conexion->prepare("SELECT estado, COUNT(*) as c FROM pedidos_web WHERE MONTH(created_at)=? AND YEAR(created_at)=? GROUP BY estado");
 $stmt->execute([$mes, $anio]);
 while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) $estados[$r['estado']] = (int)$r['c'];
 
@@ -50,7 +54,7 @@ $stmt = $conexion->prepare(
     "SELECT dpw.nombre, SUM(dpw.cantidad) as total_vendido
      FROM detalle_pedidos_web dpw
      JOIN pedidos_web pw ON dpw.id_pedido = pw.id
-     WHERE pw.estado='ENTREGADO' AND EXTRACT(MONTH FROM pw.created_at)=? AND EXTRACT(YEAR FROM pw.created_at)=?
+     WHERE pw.estado='ENTREGADO' AND MONTH(pw.created_at)=? AND YEAR(pw.created_at)=?
      GROUP BY dpw.nombre
      ORDER BY total_vendido DESC LIMIT 10"
 );
@@ -69,7 +73,7 @@ $stmt = $conexion->prepare(
     "SELECT dpw.nombre, SUM(dpw.cantidad * dpw.precio) as total
      FROM detalle_pedidos_web dpw
      JOIN pedidos_web pw ON dpw.id_pedido = pw.id
-     WHERE pw.estado='ENTREGADO' AND EXTRACT(MONTH FROM pw.created_at)=? AND EXTRACT(YEAR FROM pw.created_at)=?
+     WHERE pw.estado='ENTREGADO' AND MONTH(pw.created_at)=? AND YEAR(pw.created_at)=?
      GROUP BY dpw.nombre"
 );
 $stmt->execute([$mes, $anio]);
@@ -89,16 +93,16 @@ foreach ($cat_rows as $c) {
 
 // ── MÉTODO DE PAGO ──
 $metodos = [];
-$stmt = $conexion->prepare("SELECT metodo_pago, COUNT(*) as c FROM pedidos_web WHERE EXTRACT(MONTH FROM created_at)=? AND EXTRACT(YEAR FROM created_at)=? GROUP BY metodo_pago");
+$stmt = $conexion->prepare("SELECT metodo_pago, COUNT(*) as c FROM pedidos_web WHERE MONTH(created_at)=? AND YEAR(created_at)=? GROUP BY metodo_pago");
 $stmt->execute([$mes, $anio]);
 while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) $metodos[$r['metodo_pago']] = (int)$r['c'];
 
 // ── RESERVAS ──
-$stmt = $conexion->prepare("SELECT COUNT(*) FROM reservas WHERE EXTRACT(MONTH FROM fecha)=? AND EXTRACT(YEAR FROM fecha)=?");
+$stmt = $conexion->prepare("SELECT COUNT(*) FROM reservas WHERE MONTH(fecha)=? AND YEAR(fecha)=?");
 $stmt->execute([$mes, $anio]);
 $reservas_mes = (int)$stmt->fetchColumn();
 
-$stmt = $conexion->prepare("SELECT COUNT(*) FROM reservas WHERE EXTRACT(MONTH FROM fecha)=? AND EXTRACT(YEAR FROM fecha)=? AND estado='CONFIRMADA'");
+$stmt = $conexion->prepare("SELECT COUNT(*) FROM reservas WHERE MONTH(fecha)=? AND YEAR(fecha)=? AND estado='CONFIRMADA'");
 $stmt->execute([$mes, $anio]);
 $reservas_confirmadas = (int)$stmt->fetchColumn();
 
@@ -106,13 +110,13 @@ $reservas_confirmadas = (int)$stmt->fetchColumn();
 $mes_prev = $mes == 1 ? 12 : $mes - 1;
 $anio_prev = $mes == 1 ? $anio - 1 : $anio;
 
-$stmt = $conexion->prepare("SELECT COALESCE(SUM(total),0) FROM pedidos_web WHERE estado='ENTREGADO' AND EXTRACT(MONTH FROM created_at)=? AND EXTRACT(YEAR FROM created_at)=?");
+$stmt = $conexion->prepare("SELECT COALESCE(SUM(total),0) FROM pedidos_web WHERE estado='ENTREGADO' AND MONTH(created_at)=? AND YEAR(created_at)=?");
 $stmt->execute([$mes_prev, $anio_prev]);
 $ventas_prev = (float)$stmt->fetchColumn();
 
 $dif_porcentaje = $ventas_prev > 0 ? round(($ventas - $ventas_prev) / $ventas_prev * 100, 1) : 0;
 $dif_ordenes = 0;
-$stmt = $conexion->prepare("SELECT COUNT(*) FROM pedidos_web WHERE EXTRACT(MONTH FROM created_at)=? AND EXTRACT(YEAR FROM created_at)=?");
+$stmt = $conexion->prepare("SELECT COUNT(*) FROM pedidos_web WHERE MONTH(created_at)=? AND YEAR(created_at)=?");
 $stmt->execute([$mes_prev, $anio_prev]);
 $ord_prev = (int)$stmt->fetchColumn();
 $dif_ordenes = $ord_prev > 0 ? round(($total_ordenes - $ord_prev) / $ord_prev * 100, 1) : 0;
