@@ -1,0 +1,50 @@
+RewriteEngine On
+RewriteBase /
+
+# Allow real files and directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Root → login
+RewriteRule ^$ views/login.php [L]
+
+# Auth
+RewriteRule ^login$ views/login.php [L]
+RewriteRule ^register$ views/register.php [L]
+
+# Client pages
+RewriteRule ^inicio$ views/inicio.php [L]
+RewriteRule ^menu$ views/platos_usuario.php [L]
+RewriteRule ^bebidas$ views/bebidas_usuario.php [L]
+RewriteRule ^postres$ views/postres_cliente.php [L]
+RewriteRule ^pedidos$ views/pedidos_web.php [L]
+RewriteRule ^mis-pedidos$ views/mis_pedidos.php [L]
+RewriteRule ^mis-reservas$ views/mis_reservas.php [L]
+RewriteRule ^mi-cuenta$ views/micuenta.php [L]
+RewriteRule ^empresa$ views/empresa.php [L]
+RewriteRule ^reportes$ views/reportes_cliente.php [L]
+RewriteRule ^mesas$ views/mesas_cliente.php [L]
+
+# Admin pages
+RewriteRule ^admin$ views/dashboard.php [L]
+RewriteRule ^admin/platos$ views/platos.php [L]
+RewriteRule ^admin/bebidas$ views/bebidas.php [L]
+RewriteRule ^admin/postres$ views/postres.php [L]
+RewriteRule ^admin/pedidos$ views/ver_pedidos_web.php [L]
+RewriteRule ^admin/pedidos-mesa$ views/pedidos.php [L]
+RewriteRule ^admin/config$ views/config.php [L]
+RewriteRule ^admin/usuarios$ views/usuarios.php [L]
+RewriteRule ^admin/salas$ views/salas.php [L]
+RewriteRule ^admin/reportes$ views/reportes.php [L]
+RewriteRule ^admin/estadisticas$ views/estadisticas.php [L]
+RewriteRule ^admin/reservas$ views/reservas.php [L]
+RewriteRule ^admin/recibo$ views/recibo_pdf.php [L]
+
+# Error pages
+ErrorDocument 404 /views/login.php
+ErrorDocument 403 /views/login.php
+
+# Security
+Options -Indexes
+ServerSignature Off
